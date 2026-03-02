@@ -456,7 +456,7 @@ async function waitReplicatePrediction(prediction, token) {
     if (["succeeded", "failed", "canceled"].includes(status)) return current;
     const nextUrl = asText(current?.urls?.get);
     if (!nextUrl) break;
-    await new Promise((resolve) => setTimeout(resolve, 1300));
+    await sleep(1300);
     current = await replicateRequest("GET", nextUrl, null, token);
   }
   return current;
@@ -513,10 +513,6 @@ async function generateViaReplicateCandidates({ modelSlugs, input }) {
     const result = await generateViaReplicate({ modelSlug: slug, input });
     if (result.ok) return result;
     lastError = asText(result.error);
-    if (/could not be found|resource not found|404/i.test(lastError)) {
-      continue;
-    }
-    break;
   }
   return { ok: false, error: lastError || "No compatible Replicate video model found" };
 }
@@ -544,23 +540,44 @@ function falStatus(payload) {
 
 async function waitFal({ responseUrl, statusUrl, key }) {
   for (let i = 0; i < 45; i += 1) {
-    if (responseUrl) {
-      const outputPayload = await falRequest("GET", responseUrl, null, key);
-      const mediaUrl = extractMediaUrl(outputPayload?.images || outputPayload?.video || outputPayload?.output || outputPayload?.data || outputPayload);
-      if (mediaUrl) return { ok: true, mediaUrl, provider: "FAL" };
-    }
+    await sleep(1300);
 
-    if (!statusUrl) break;
-    const statusPayload = await falRequest("GET", statusUrl, null, key);
-    const status = falStatus(statusPayload);
-    if (["completed", "succeeded", "success", "ok", "done"].includes(status)) {
-      const mediaUrl = extractMediaUrl(statusPayload?.images || statusPayload?.video || statusPayload?.output || statusPayload?.data || statusPayload);
-      if (mediaUrl) return { ok: true, mediaUrl, provider: "FAL" };
+    try {
+      if (statusUrl) {
+        const statusPayload = await falRequest("GET", statusUrl, null, key);
+        const status = falStatus(statusPayload);
+        if (["failed", "error", "canceled", "cancelled"].includes(status)) {
+          return { ok: false, error: asText(statusPayload?.error) || "fal.ai request failed" };
+        }
+
+        if (["completed", "succeeded", "success", "ok", "done"].includes(status)) {
+          const mediaFromStatus = extractMediaUrl(statusPayload?.images || statusPayload?.video || statusPayload?.output || statusPayload?.data);
+          if (mediaFromStatus) return { ok: true, mediaUrl: mediaFromStatus, provider: "FAL" };
+
+          if (responseUrl) {
+            try {
+              const outputPayload = await falRequest("GET", responseUrl, null, key);
+              const mediaUrl = extractMediaUrl(outputPayload?.images || outputPayload?.video || outputPayload?.output || outputPayload?.data);
+              if (mediaUrl) return { ok: true, mediaUrl, provider: "FAL" };
+            } catch (_error) {
+              // response can lag behind status updates; keep polling
+            }
+          }
+        }
+      } else if (responseUrl) {
+        try {
+          const outputPayload = await falRequest("GET", responseUrl, null, key);
+          const mediaUrl = extractMediaUrl(outputPayload?.images || outputPayload?.video || outputPayload?.output || outputPayload?.data);
+          if (mediaUrl) return { ok: true, mediaUrl, provider: "FAL" };
+        } catch (_error) {
+          // not ready yet
+        }
+      } else {
+        break;
+      }
+    } catch (_error) {
+      // transient API/network issues while polling
     }
-    if (["failed", "error", "canceled", "cancelled"].includes(status)) {
-      return { ok: false, error: asText(statusPayload?.error) || "fal.ai request failed" };
-    }
-    await new Promise((resolve) => setTimeout(resolve, 1300));
   }
   return { ok: false, error: "fal.ai timeout" };
 }
@@ -573,7 +590,7 @@ async function generateViaFalFlux(prompt) {
     const endpoint = "https://queue.fal.run/fal-ai/flux/schnell";
     const created = await falRequest("POST", endpoint, { prompt, image_size: "landscape_16_9" }, key);
 
-    const immediateUrl = extractMediaUrl(created?.images || created?.output || created?.data || created);
+    const immediateUrl = extractMediaUrl(created?.images || created?.output || created?.data);
     if (immediateUrl) return { ok: true, mediaUrl: immediateUrl, provider: "FAL" };
 
     const requestId = asText(created?.request_id || created?.requestId || created?.id);
@@ -604,7 +621,7 @@ async function generateViaFalVideo({ prompt, modelId }) {
         ...getFalVideoInputOverrides(),
       }, key);
 
-      const immediateUrl = extractMediaUrl(created?.video || created?.videos || created?.output || created?.data || created);
+      const immediateUrl = extractMediaUrl(created?.video || created?.videos || created?.output || created?.data);
       if (immediateUrl) return { ok: true, mediaUrl: immediateUrl, provider: "FAL" };
 
       const requestId = asText(created?.request_id || created?.requestId || created?.id);
@@ -615,14 +632,8 @@ async function generateViaFalVideo({ prompt, modelId }) {
       if (waited.ok) return waited;
 
       lastError = asText(waited.error);
-      if (!/not found|404|unknown model|invalid/i.test(lastError)) {
-        return waited;
-      }
     } catch (error) {
       lastError = error instanceof Error ? error.message : "fal.ai video request failed";
-      if (!/not found|404|unknown model|invalid/i.test(lastError)) {
-        return { ok: false, error: lastError };
-      }
     }
   }
 
@@ -781,6 +792,9 @@ async function generateOneResult({ category, format, prompt, mode, model, index 
 
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     res.status(204).end();
     return;
   }
@@ -848,6 +862,6 @@ export default async function handler(req, res) {
     format,
     results,
     winnerResultId: winner?.id,
-    hasErrors: results.some((item) => asText(item.error)),
+    hasErrors: results.some((item) => Boolean(item.error)),
   });
 }

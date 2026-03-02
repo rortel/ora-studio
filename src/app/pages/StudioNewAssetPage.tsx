@@ -357,9 +357,13 @@ export function StudioNewAssetPage() {
     let generatedScore = 94;
 
     try {
+      const token = getAccessToken();
       const response = await fetch("/api/generate-campaign", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(apiPayload),
       });
       const payload = await response.json().catch(() => null);

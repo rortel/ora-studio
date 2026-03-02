@@ -22,10 +22,7 @@ function normalizeUserProfile(user, existing, defaults) {
     "";
 
   const role = defaults.forceAdmin ? "admin" : "client";
-  const subscription =
-    role === "admin"
-      ? asText(existing?.subscription) || defaults.subscription || "Studio + Brand Vault"
-      : asText(existing?.subscription) || defaults.subscription || "Simple Generation";
+  const subscription = asText(existing?.subscription) || defaults.subscription || "Studio + Brand Vault";
   const creditsMonthly =
     typeof existing?.creditsMonthly === "number"
       ? existing.creditsMonthly
@@ -81,8 +78,8 @@ async function ensureUserProfile(user) {
   const defaults = {
     forceAdmin: forcedAdmin,
     role: forcedAdmin ? "admin" : "client",
-    subscription: forcedAdmin ? "Studio + Brand Vault" : "Simple Generation",
-    creditsMonthly: forcedAdmin ? 4000 : 50,
+    subscription: "Studio + Brand Vault",
+    creditsMonthly: forcedAdmin ? 4000 : 500,
     creditsPurchased: 0,
     createdAt: nowIso(),
   };

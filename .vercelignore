@@ -1,0 +1,12 @@
+.DS_Store
+node_modules
+dist
+backups
+_incoming
+_backup_before_restore_20260227
+ORA_STUDIO_CLAUDE_HANDOFF_2026-03-01
+Archive.zip
+Archive 2.zip
+ORA_STUDIO_CLAUDE_HANDOFF_2026-03-01.zip
+*.zip
+*.tar.gz

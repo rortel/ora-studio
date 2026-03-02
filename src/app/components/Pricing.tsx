@@ -1,0 +1,256 @@
+import { Link } from "react-router";
+import { Check } from "lucide-react";
+import { motion } from "motion/react";
+
+const subscriptionPlans = [
+  {
+    name: "Simple Generation",
+    subtitle: "For individuals, creators, and small teams getting started.",
+    price: "€19/month",
+    features: [
+      "500 credits per month",
+      "Hub + Chat access",
+      "Arena comparison (up to 2 models)",
+      "Access to all standard text, image, video, and code models",
+      "Top-up credits available anytime",
+      "Email support",
+    ],
+    cta: "Start with Simple",
+    highlighted: false,
+  },
+  {
+    name: "Advanced Models",
+    subtitle: "For growing teams and studios that need premium models and deeper comparisons.",
+    price: "€59/month",
+    features: [
+      "1,500 credits per month",
+      "Everything in Simple Generation",
+      "Access to premium model tier (Claude Sonnet 4, GPT-4o, Imagen 3, Veo 2)",
+      "Arena comparison (up to 4 models)",
+      "Multi-format workflows",
+      "Priority support",
+    ],
+    cta: "Start with Advanced",
+    highlighted: false,
+  },
+  {
+    name: "Studio + Brand Vault",
+    subtitle: "For teams and agencies that need brand compliance on top of AI generation.",
+    price: "€149/month",
+    features: [
+      "4,000 credits per month",
+      "Everything in Advanced Models",
+      "Full Studio mode with Brand Vault",
+      "15 specialist agents",
+      "Campaign workflows, folders, approval flow",
+      "Export and publish tools",
+      "Priority support",
+    ],
+    cta: "Start with Studio",
+    highlighted: true,
+  },
+];
+
+const creditPacks = [
+  {
+    name: "Starter",
+    price: "€9",
+    credits: "100 credits",
+    bestFor: "Trying ORA for the first time",
+    cta: "Get Starter",
+  },
+  {
+    name: "Builder",
+    price: "€29",
+    credits: "400 credits",
+    bestFor: "One-off projects",
+    cta: "Get Builder",
+  },
+  {
+    name: "Production",
+    price: "€59",
+    credits: "1,000 credits",
+    bestFor: "Serious output without commitment",
+    cta: "Get Production",
+  },
+];
+
+export function Pricing() {
+  return (
+    <section id="pricing" className="py-20 md:py-28 bg-secondary/40">
+      <div className="max-w-[1200px] mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-14"
+        >
+          <h2
+            className="text-foreground mb-4"
+            style={{
+              fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+              fontWeight: 500,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+            }}
+          >
+            Clear pricing. No surprises.
+          </h2>
+          <p className="text-muted-foreground max-w-[780px]" style={{ fontSize: "16px", lineHeight: 1.55 }}>
+            Subscribe monthly for the best value. Or buy credit packs with no commitment - use them whenever you want.
+          </p>
+        </motion.div>
+
+        <div className="mb-6">
+          <p className="text-ora-signal" style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em" }}>
+            SUBSCRIPTIONS
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
+          {subscriptionPlans.map((plan, i) => (
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className={`relative flex flex-col bg-card rounded-xl border ${
+                plan.highlighted ? "border-ora-signal" : "border-border"
+              }`}
+              style={{
+                boxShadow: plan.highlighted
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 12px 40px rgba(59,79,196,0.08)"
+                  : "0 1px 2px rgba(0,0,0,0.02)",
+              }}
+            >
+              {plan.highlighted && (
+                <div className="absolute -top-3 left-6">
+                  <span
+                    className="bg-ora-signal text-white px-3 py-0.5 rounded-full"
+                    style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.05em" }}
+                  >
+                    MOST POPULAR
+                  </span>
+                </div>
+              )}
+
+              <div className="p-7 pb-0">
+                <h3 className="text-foreground mb-2" style={{ fontSize: "18px", fontWeight: 500 }}>
+                  {plan.name}
+                </h3>
+                <p className="text-muted-foreground mb-5" style={{ fontSize: "13px", minHeight: 42 }}>
+                  {plan.subtitle}
+                </p>
+                <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-border">
+                  <span
+                    className="text-foreground"
+                    style={{ fontSize: "40px", fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1 }}
+                  >
+                    {plan.price.replace("/month", "")}
+                  </span>
+                  <span className="text-muted-foreground" style={{ fontSize: "15px" }}>
+                    /month
+                  </span>
+                </div>
+              </div>
+
+              <ul className="px-7 space-y-3 flex-1">
+                {plan.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check size={14} className="text-ora-signal mt-0.5 flex-shrink-0" />
+                    <span className="text-foreground/75" style={{ fontSize: "14px", lineHeight: 1.45 }}>
+                      {f}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="p-7 pt-8">
+                <Link
+                  to="/studio"
+                  className={`block w-full py-3 rounded-lg transition-all text-center ${
+                    plan.highlighted
+                      ? "bg-ora-signal text-white hover:opacity-90"
+                      : "bg-secondary text-foreground hover:bg-muted border border-border"
+                  }`}
+                  style={{ fontSize: "14px", fontWeight: 500 }}
+                >
+                  {plan.cta}
+                </Link>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="mb-5">
+          <h3 className="text-foreground mb-2" style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.02em" }}>
+            Credit packs (no subscription required)
+          </h3>
+          <p className="text-muted-foreground" style={{ fontSize: "14px", lineHeight: 1.55 }}>
+            Want to try ORA without a subscription? Buy credits and use them at your own pace. They never expire.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6 mb-4">
+          {creditPacks.map((pack, i) => (
+            <motion.div
+              key={pack.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="flex flex-col bg-card rounded-xl border border-border"
+              style={{ boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}
+            >
+              <div className="p-7 pb-0">
+                <h4 className="text-foreground mb-2" style={{ fontSize: "18px", fontWeight: 500 }}>
+                  {pack.name}
+                </h4>
+                <p className="text-muted-foreground mb-5" style={{ fontSize: "13px", minHeight: 40 }}>
+                  {pack.bestFor}
+                </p>
+                <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-border">
+                  <span
+                    className="text-foreground"
+                    style={{ fontSize: "40px", fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1 }}
+                  >
+                    {pack.price}
+                  </span>
+                  <span className="text-muted-foreground" style={{ fontSize: "15px" }}>
+                    one-time
+                  </span>
+                </div>
+              </div>
+
+              <ul className="px-7 space-y-3 flex-1">
+                {[pack.credits, "Credits never expire", "Hub + Chat with standard models"].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5">
+                    <Check size={14} className="text-ora-signal mt-0.5 flex-shrink-0" />
+                    <span className="text-foreground/75" style={{ fontSize: "14px", lineHeight: 1.45 }}>
+                      {feature}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="p-7 pt-8">
+                <Link
+                  to="/studio"
+                  className="block w-full py-3 rounded-lg transition-all text-center bg-secondary text-foreground hover:bg-muted border border-border"
+                  style={{ fontSize: "14px", fontWeight: 500 }}
+                >
+                  {pack.cta}
+                </Link>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        <p className="text-muted-foreground mb-6" style={{ fontSize: "13px", lineHeight: 1.55 }}>
+          All packs give you access to Hub and Chat with standard models. Upgrade to a subscription anytime - your purchased credits carry over.
+        </p>
+      </div>
+    </section>
+  );
+}

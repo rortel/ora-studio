@@ -15,6 +15,7 @@ import {
   Bot,
   Shield,
   Settings,
+  Clapperboard,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -74,7 +75,7 @@ export default function Sidebar({ credits, email, role }: SidebarProps) {
           );
         })}
 
-        {/* Brand Vault separator */}
+        {/* Brand & Production separator */}
         <div className="pt-3 pb-1 px-3">
           <span className="text-zinc-600 text-[10px] uppercase tracking-widest font-medium">Brand</span>
         </div>
@@ -90,6 +91,19 @@ export default function Sidebar({ credits, email, role }: SidebarProps) {
         >
           <Shield size={18} className={clsx(pathname.startsWith("/studio/vault") ? "text-primary" : "text-zinc-500")} />
           Brand Vault
+        </Link>
+
+        <Link
+          href="/studio/production"
+          className={clsx(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+            pathname.startsWith("/studio/production")
+              ? "bg-primary/15 text-primary"
+              : "text-zinc-400 hover:text-white hover:bg-white/5"
+          )}
+        >
+          <Clapperboard size={18} className={clsx(pathname.startsWith("/studio/production") ? "text-primary" : "text-zinc-500")} />
+          Production
         </Link>
       </nav>
 

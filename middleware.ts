@@ -15,6 +15,17 @@ const SUPABASE_ANON_KEY =
   "";
 
 export async function middleware(request: NextRequest) {
+  // If any single cookie exceeds 4096 bytes, the session pre-dates cookie-chunking.
+  // Clear all Supabase auth cookies so Vercel's 494 header limit is never hit.
+  const oversized = request.cookies.getAll().some((c) => c.value.length > 4096);
+  if (oversized) {
+    const clearResponse = NextResponse.redirect(new URL("/login", request.url));
+    request.cookies.getAll().forEach((c) => {
+      if (c.name.startsWith("sb-")) clearResponse.cookies.delete(c.name);
+    });
+    return clearResponse;
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

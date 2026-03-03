@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: "Stripe non configuré." }, { status: 503 });
+  }
+
+  const { createClient, createAdminClient } = await import("@/lib/supabase/server");
+  const { stripe } = await import("@/lib/stripe");
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 

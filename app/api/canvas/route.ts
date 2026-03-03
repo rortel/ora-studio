@@ -7,14 +7,13 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("brand_vaults")
+  const { data } = await admin
+    .from("canvas_projects")
     .select("*")
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+    .order("updated_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ vaults: data ?? [] });
+  return NextResponse.json({ projects: data ?? [] });
 }
 
 export async function POST(req: NextRequest) {
@@ -25,13 +24,13 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const admin = createAdminClient();
   const { data, error } = await admin
-    .from("brand_vaults")
+    .from("canvas_projects")
     .insert({ ...body, user_id: user.id })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ vault: data }, { status: 201 });
+  return NextResponse.json({ project: data }, { status: 201 });
 }
 
 export async function PUT(req: NextRequest) {
@@ -39,12 +38,12 @@ export async function PUT(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
-  const { id, products, ...updates } = await req.json();
+  const { id, ...updates } = await req.json();
   if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
 
   const admin = createAdminClient();
   const { data, error } = await admin
-    .from("brand_vaults")
+    .from("canvas_projects")
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("user_id", user.id)
@@ -52,7 +51,7 @@ export async function PUT(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ vault: data });
+  return NextResponse.json({ project: data });
 }
 
 export async function DELETE(req: NextRequest) {
@@ -61,15 +60,7 @@ export async function DELETE(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
 
   const { id } = await req.json();
-  if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
-
   const admin = createAdminClient();
-  const { error } = await admin
-    .from("brand_vaults")
-    .delete()
-    .eq("id", id)
-    .eq("user_id", user.id);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await admin.from("canvas_projects").delete().eq("id", id).eq("user_id", user.id);
   return NextResponse.json({ success: true });
 }

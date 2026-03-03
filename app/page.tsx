@@ -5,6 +5,7 @@ import { SocialProof } from "@/components/landing/SocialProof";
 import { ThreeSteps } from "@/components/landing/ThreeSteps";
 import { PulseRadar } from "@/components/landing/PulseRadar";
 import { ValueProposition } from "@/components/landing/ValueProposition";
+import { CommandCenterMock } from "@/components/landing/CommandCenterMock";
 import { DecisionMakers } from "@/components/landing/DecisionMakers";
 import { Agents } from "@/components/landing/Agents";
 import { Pricing } from "@/components/landing/Pricing";
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <ThreeSteps />
         <PulseRadar />
         <ValueProposition />
+        <CommandCenterMock />
         <DecisionMakers />
         <Agents />
         <Pricing />

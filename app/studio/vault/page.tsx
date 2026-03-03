@@ -2,977 +2,494 @@
 
 import { useState, useEffect } from "react";
 import {
-  Shield, Plus, Trash2, Globe, ChevronRight, Loader2,
-  Palette, BookOpen, Users, Video, ImageIcon, Sparkles,
-  Building2, Target, Share2, CheckCircle, XCircle, TrendingUp,
+  Shield, Plus, Trash2, ChevronDown, ChevronUp, X, Check,
+  AlertCircle, Loader2, Pen, Building2, Palette, Type, Users, Package, Save
 } from "lucide-react";
-import { clsx } from "clsx";
 
-interface Guidelines {
-  brand_name?: string;
-  brand_summary?: string;
-  industry?: string;
+interface Persona {
+  name: string;
+  profile: string;
+  pains: string;
+  motivations: string;
+}
+
+interface Product {
+  id?: string;
+  name: string;
+  description: string;
+  benefits: string[];
+  objections: string[];
+  is_primary: boolean;
+}
+
+interface Vault {
+  id: string;
+  name: string;
+  brand_name: string;
   logo_url?: string;
-  hero_image?: string;
-  products_services?: string[];
-  competitors?: string[];
-  social_media?: Record<string, string>;
-  editorial?: {
-    tone?: string;
-    formality?: string;
-    language_style?: string;
-    vocabulary_approved?: string[];
-    vocabulary_forbidden?: string[];
-    key_messages?: string[];
-    tagline?: string;
-  };
-  visual?: {
-    primary_colors?: string[];
-    secondary_colors?: string[];
-    style?: string;
-    imagery_style?: string;
-    typography_style?: string;
-    avoid?: string[];
-  };
-  audience?: {
-    primary?: string;
-    secondary?: string;
-    age_range?: string;
-    values?: string[];
-    pain_points?: string[];
-  };
-  content_guidelines?: {
-    do?: string[];
-    dont?: string[];
-    image_formats?: string[];
-    video_style?: string;
-    posting_frequency?: string;
-  };
-}
-
-interface BrandVault {
-  id: string;
-  name: string;
-  brand_name?: string;
   website_url?: string;
-  guidelines?: Guidelines;
-  sources?: string[];
-  created_at: string;
-  updated_at: string;
+  expertise?: string;
+  mission?: string;
+  usp?: string;
+  tone_config?: { tone: string; formality: number; style: string };
+  palette?: { primary: string[]; secondary: string[]; neutral: string[] };
+  typography?: { heading: string; body: string };
+  personas?: Persona[];
+  products?: Product[];
 }
 
-interface Campaign {
-  id: string;
-  name: string;
-  brief: string;
-  status: string;
-  assets: Array<{ type: string; content: string }>;
-  created_at: string;
-  brand_vaults?: { name: string };
+const TONE_OPTIONS = ["professionnel", "chaleureux", "expert", "direct", "créatif", "inspirant"];
+const STYLE_OPTIONS = ["formel", "décontracté", "storytelling", "informatif"];
+const FONT_OPTIONS = ["Inter", "Playfair Display", "Montserrat", "Poppins", "Raleway", "Georgia", "Source Sans Pro"];
+
+function ColorSwatch({ color, onRemove }: { color: string; onRemove: () => void }) {
+  return (
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
+      style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+      <div className="w-4 h-4 rounded-full border" style={{ background: color, borderColor: "var(--border)" }} />
+      <span style={{ fontSize: "12px", color: "var(--foreground)" }}>{color}</span>
+      <button onClick={onRemove} className="ml-0.5 hover:opacity-70">
+        <X size={10} style={{ color: "var(--muted-foreground)" }} />
+      </button>
+    </div>
+  );
 }
 
-const SOCIAL_ICONS: Record<string, string> = {
-  instagram: "IG",
-  linkedin: "LI",
-  twitter: "X",
-  facebook: "FB",
-  youtube: "YT",
-  tiktok: "TK",
-};
+function Section({ title, icon: Icon, children, defaultOpen = true }: {
+  title: string; icon: React.ElementType; children: React.ReactNode; defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid var(--border)" }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="w-full flex items-center justify-between px-5 py-4"
+        style={{ background: "var(--card)" }}>
+        <div className="flex items-center gap-2.5">
+          <Icon size={15} style={{ color: "var(--ora-signal)" }} />
+          <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--foreground)" }}>{title}</span>
+        </div>
+        {open ? <ChevronUp size={15} style={{ color: "var(--muted-foreground)" }} /> : <ChevronDown size={15} style={{ color: "var(--muted-foreground)" }} />}
+      </button>
+      {open && (
+        <div className="px-5 pb-5 pt-1" style={{ background: "var(--card)", borderTop: "1px solid var(--border)" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function VaultPage() {
-  const [vaults, setVaults] = useState<BrandVault[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [selectedVault, setSelectedVault] = useState<BrandVault | null>(null);
-  const [view, setView] = useState<"vaults" | "create_vault" | "vault_detail" | "create_campaign" | "campaign_detail">("vaults");
-  const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
+  const [vault, setVault] = useState<Vault | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>("trial");
+  const [newColor, setNewColor] = useState({ primary: "", secondary: "", neutral: "" });
+  const [newPersona, setNewPersona] = useState<Persona>({ name: "", profile: "", pains: "", motivations: "" });
+  const [showPersonaForm, setShowPersonaForm] = useState(false);
+  const [newProduct, setNewProduct] = useState<Product>({ name: "", description: "", benefits: [], objections: [], is_primary: false });
+  const [showProductForm, setShowProductForm] = useState(false);
+  const [addingProduct, setAddingProduct] = useState(false);
 
-  const [vaultName, setVaultName] = useState("");
-  const [websiteUrls, setWebsiteUrls] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState("");
+  useEffect(() => { fetchData(); }, []);
 
-  const [campaignName, setCampaignName] = useState("");
-  const [campaignBrief, setCampaignBrief] = useState("");
-  const [productUrl, setProductUrl] = useState("");
-  const [assetTypes, setAssetTypes] = useState<string[]>(["text", "image_prompt"]);
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState("");
-
-  useEffect(() => {
-    fetchVaults();
-    fetchCampaigns();
-  }, []);
-
-  const fetchVaults = async () => {
-    const res = await fetch("/api/vault");
-    if (res.ok) setVaults(await res.json());
-  };
-
-  const fetchCampaigns = async () => {
-    const res = await fetch("/api/vault/campaign");
-    if (res.ok) setCampaigns(await res.json());
-  };
-
-  const handleAnalyzeAndCreate = async () => {
-    if (!vaultName.trim() || !websiteUrls.trim()) return;
-    setAnalyzing(true);
-    setAnalyzeError("");
-
-    const urls = websiteUrls.split("\n").map((u) => u.trim()).filter(Boolean);
-
-    const analyzeRes = await fetch("/api/vault/analyze", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ urls }),
-    });
-
-    if (!analyzeRes.ok) {
-      const err = await analyzeRes.json();
-      setAnalyzeError(err.error ?? "Erreur d'analyse");
-      setAnalyzing(false);
-      return;
+  async function fetchData() {
+    const [vaultRes, profileRes] = await Promise.all([
+      fetch("/api/vault"),
+      fetch("/api/credits"),
+    ]);
+    const vaultData = await vaultRes.json();
+    const profileData = await profileRes.json();
+    setUserPlan(profileData.plan ?? "trial");
+    if (vaultData.vaults?.length > 0) {
+      const v = vaultData.vaults[0];
+      const productsRes = await fetch(`/api/vault/products?vault_id=${v.id}`);
+      const productsData = await productsRes.json();
+      setVault({ ...v, products: productsData.products ?? [] });
     }
+    setLoading(false);
+  }
 
-    const { guidelines } = await analyzeRes.json();
-
-    const createRes = await fetch("/api/vault", {
+  async function createVault() {
+    setCreating(true);
+    const res = await fetch("/api/vault", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: vaultName,
-        brand_name: guidelines.brand_name ?? vaultName,
-        website_url: urls[0],
-        guidelines,
-        sources: urls,
+        name: "Mon Brand Vault",
+        brand_name: "",
+        tone_config: { tone: "professionnel", formality: 3, style: "direct" },
+        palette: { primary: [], secondary: [], neutral: [] },
+        typography: { heading: "Inter", body: "Inter" },
+        personas: [],
       }),
     });
+    const data = await res.json();
+    if (data.vault) setVault({ ...data.vault, products: [] });
+    setCreating(false);
+  }
 
-    if (createRes.ok) {
-      await fetchVaults();
-      setVaultName("");
-      setWebsiteUrls("");
-      setView("vaults");
-    } else {
-      const err = await createRes.json();
-      setAnalyzeError(err.error ?? "Erreur de création");
-    }
-
-    setAnalyzing(false);
-  };
-
-  const handleDeleteVault = async (id: string) => {
+  async function saveVault() {
+    if (!vault) return;
+    setSaving(true);
     await fetch("/api/vault", {
-      method: "DELETE",
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify(vault),
     });
-    setVaults((v) => v.filter((vault) => vault.id !== id));
-    if (selectedVault?.id === id) { setSelectedVault(null); setView("vaults"); }
-  };
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
 
-  const handleCreateCampaign = async () => {
-    if (!selectedVault || !campaignName.trim() || !campaignBrief.trim()) return;
-    setGenerating(true);
-    setGenError("");
-
-    const res = await fetch("/api/vault/campaign", {
+  async function addProduct() {
+    if (!vault || !newProduct.name) return;
+    const hasProduct = (vault.products ?? []).length > 0;
+    setAddingProduct(true);
+    const res = await fetch("/api/vault/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        vault_id: selectedVault.id,
-        name: campaignName,
-        brief: campaignBrief,
-        product_url: productUrl || undefined,
-        asset_types: assetTypes,
-      }),
+      body: JSON.stringify({ ...newProduct, vault_id: vault.id, is_primary: !hasProduct }),
     });
+    const data = await res.json();
+    if (data.error) { setAddingProduct(false); return; }
+    if (data.product) setVault(v => v ? { ...v, products: [...(v.products ?? []), data.product] } : v);
+    setNewProduct({ name: "", description: "", benefits: [], objections: [], is_primary: false });
+    setShowProductForm(false);
+    setAddingProduct(false);
+  }
 
-    if (!res.ok) {
-      const err = await res.json();
-      setGenError(err.error ?? "Erreur de génération");
-      setGenerating(false);
-      return;
-    }
+  async function deleteProduct(productId: string) {
+    await fetch(`/api/vault/products?id=${productId}`, { method: "DELETE" });
+    setVault(v => v ? { ...v, products: (v.products ?? []).filter(p => p.id !== productId) } : v);
+  }
 
-    const campaign = await res.json();
-    setCampaigns((c) => [campaign, ...c]);
-    setActiveCampaign(campaign);
-    setCampaignName("");
-    setCampaignBrief("");
-    setProductUrl("");
-    setView("campaign_detail");
-    setGenerating(false);
-  };
+  function updateVault(field: keyof Vault, value: unknown) {
+    setVault(v => v ? { ...v, [field]: value } : v);
+  }
 
-  const g = selectedVault?.guidelines;
+  function addColor(palette_key: "primary" | "secondary" | "neutral") {
+    const color = newColor[palette_key];
+    if (!color || !vault) return;
+    const hex = color.startsWith("#") ? color : `#${color}`;
+    updateVault("palette", { ...vault.palette, [palette_key]: [...(vault.palette?.[palette_key] ?? []), hex] });
+    setNewColor(c => ({ ...c, [palette_key]: "" }));
+  }
+
+  function removeColor(palette_key: "primary" | "secondary" | "neutral", idx: number) {
+    if (!vault) return;
+    const arr = [...(vault.palette?.[palette_key] ?? [])];
+    arr.splice(idx, 1);
+    updateVault("palette", { ...vault.palette, [palette_key]: arr });
+  }
+
+  function addPersona() {
+    if (!newPersona.name || !vault) return;
+    updateVault("personas", [...(vault.personas ?? []), newPersona]);
+    setNewPersona({ name: "", profile: "", pains: "", motivations: "" });
+    setShowPersonaForm(false);
+  }
+
+  function removePersona(idx: number) {
+    if (!vault) return;
+    const arr = [...(vault.personas ?? [])];
+    arr.splice(idx, 1);
+    updateVault("personas", arr);
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 size={24} className="animate-spin" style={{ color: "var(--ora-signal)" }} />
+      </div>
+    );
+  }
+
+  if (userPlan === "trial" || userPlan === "generate") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+          style={{ background: "var(--ora-signal-light)" }}>
+          <Shield size={26} style={{ color: "var(--ora-signal)" }} />
+        </div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "var(--foreground)", marginBottom: 8 }}>
+          Brand Vault — Studio uniquement
+        </h2>
+        <p style={{ fontSize: "14px", color: "var(--muted-foreground)", maxWidth: 400, marginBottom: 24 }}>
+          Le Brand Vault est disponible avec la formule Studio. Il stocke ton identité de marque et l'injecte automatiquement dans toutes tes générations.
+        </p>
+        <a href="/studio/credits"
+          className="px-5 py-2.5 rounded-xl text-white"
+          style={{ background: "var(--ora-signal)", fontSize: "14px", fontWeight: 500 }}>
+          Passer à Studio — €49/mois
+        </a>
+      </div>
+    );
+  }
+
+  if (!vault) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+          style={{ background: "var(--ora-signal-light)" }}>
+          <Shield size={26} style={{ color: "var(--ora-signal)" }} />
+        </div>
+        <h2 style={{ fontSize: "22px", fontWeight: 600, color: "var(--foreground)", marginBottom: 8 }}>
+          Crée ton Brand Vault
+        </h2>
+        <p style={{ fontSize: "14px", color: "var(--muted-foreground)", maxWidth: 380, marginBottom: 24 }}>
+          Un Brand Vault centralise l'identité de ta marque. Toutes tes générations l'utilisent automatiquement.
+        </p>
+        <button onClick={createVault} disabled={creating}
+          className="px-5 py-2.5 rounded-xl text-white"
+          style={{ background: "var(--ora-signal)", fontSize: "14px", fontWeight: 500 }}>
+          {creating ? "Création…" : "Créer mon Vault"}
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto" style={{ background: "var(--background)" }}>
-      {/* Header */}
+    <div className="max-w-3xl mx-auto px-6 py-10">
       <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg" style={{ background: "var(--ora-signal-light)" }}>
-            <Shield size={20} style={{ color: "var(--ora-signal)" }} />
-          </div>
-          <div>
-            <h1 style={{ fontSize: "18px", fontWeight: 700, color: "var(--foreground)", letterSpacing: "-0.01em" }}>
-              Brand Vault
-            </h1>
-            <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>
-              Chartes de marque · Stratégie · Campagnes IA
-            </p>
-          </div>
+        <div>
+          <h1 style={{ fontSize: "24px", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--foreground)" }}>
+            Brand Vault
+          </h1>
+          <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: 3 }}>
+            Injecté automatiquement dans toutes tes générations.
+          </p>
         </div>
-        {view === "vaults" && (
-          <button
-            onClick={() => setView("create_vault")}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 transition-all"
-            style={{ background: "var(--ora-signal)", color: "#ffffff", fontSize: "13px", fontWeight: 500 }}>
-            <Plus size={15} />Nouveau Vault
-          </button>
-        )}
-        {view !== "vaults" && (
-          <button
-            onClick={() => setView("vaults")}
-            className="transition-colors"
-            style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>
-            ← Retour
-          </button>
-        )}
+        <button onClick={saveVault} disabled={saving}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all"
+          style={{
+            background: saved ? "rgba(34,197,94,0.1)" : "var(--ora-signal)",
+            color: saved ? "#16a34a" : "white",
+            fontSize: "13px", fontWeight: 500,
+            border: saved ? "1px solid rgba(34,197,94,0.3)" : "none",
+          }}>
+          {saving ? <Loader2 size={14} className="animate-spin" /> : saved ? <Check size={14} /> : <Save size={14} />}
+          {saving ? "Sauvegarde…" : saved ? "Sauvegardé" : "Sauvegarder"}
+        </button>
       </div>
 
-      {/* ── VAULTS LIST ── */}
-      {view === "vaults" && (
-        <div className="space-y-6">
+      <Section title="Identité de marque" icon={Building2}>
+        <div className="grid grid-cols-2 gap-3 mt-3">
           <div>
-            <h2 style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", marginBottom: "12px" }}>
-              Vaults ({vaults.length})
-            </h2>
-            {vaults.length === 0 ? (
-              <div
-                className="rounded-xl p-8 text-center"
-                style={{ border: "1px dashed var(--border)", background: "var(--card)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <Shield size={32} className="mx-auto mb-3" style={{ color: "var(--muted-foreground)", opacity: 0.4 }} />
-                <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginBottom: "4px" }}>Aucun vault de marque</p>
-                <p style={{ fontSize: "12px", color: "var(--muted-foreground)", opacity: 0.6, marginBottom: "16px" }}>
-                  Créez votre premier vault en analysant votre site web
-                </p>
-                <button
-                  onClick={() => setView("create_vault")}
-                  className="rounded-lg px-4 py-2 transition-all"
-                  style={{ background: "var(--ora-signal)", color: "#ffffff", fontSize: "13px", fontWeight: 500 }}>
-                  Créer un vault
+            <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Nom de la marque</label>
+            <input value={vault.brand_name ?? ""} onChange={e => updateVault("brand_name", e.target.value)}
+              placeholder="ex: Acme Corp" className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none"
+              style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+          </div>
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Site web</label>
+            <input value={vault.website_url ?? ""} onChange={e => updateVault("website_url", e.target.value)}
+              placeholder="https://..." className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none"
+              style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+          </div>
+        </div>
+        <div className="mt-3">
+          <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Expertise / Secteur</label>
+          <input value={vault.expertise ?? ""} onChange={e => updateVault("expertise", e.target.value)}
+            placeholder="ex: Logiciels SaaS B2B pour RH" className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none"
+            style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+        </div>
+        <div className="mt-3">
+          <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Mission (1 phrase)</label>
+          <input value={vault.mission ?? ""} onChange={e => updateVault("mission", e.target.value)}
+            placeholder="ex: Simplifier le recrutement pour les PME" className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none"
+            style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+        </div>
+        <div className="mt-3">
+          <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Proposition de valeur (USP)</label>
+          <textarea value={vault.usp ?? ""} onChange={e => updateVault("usp", e.target.value)}
+            placeholder="Ce qui te rend unique vs les concurrents…" rows={2}
+            className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none resize-none"
+            style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+        </div>
+      </Section>
+
+      <Section title="Ton & Style éditorial" icon={Pen}>
+        <div className="grid grid-cols-2 gap-4 mt-3">
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Ton principal</label>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {TONE_OPTIONS.map(t => (
+                <button key={t} onClick={() => updateVault("tone_config", { ...vault.tone_config, tone: t })}
+                  className="px-2.5 py-1 rounded-lg transition-all capitalize"
+                  style={{ fontSize: "12px", background: vault.tone_config?.tone === t ? "var(--ora-signal)" : "var(--secondary)", color: vault.tone_config?.tone === t ? "white" : "var(--foreground)", border: vault.tone_config?.tone === t ? "none" : "1px solid var(--border)" }}>
+                  {t}
                 </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {vaults.map((vault) => {
-                  const logo = vault.guidelines?.logo_url;
-                  const colors = vault.guidelines?.visual?.primary_colors ?? [];
-                  return (
-                    <div
-                      key={vault.id}
-                      className="rounded-xl p-4 transition-all group cursor-pointer"
-                      style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}
-                      onClick={() => { setSelectedVault(vault); setView("vault_detail"); }}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          {logo ? (
-                            <img
-                              src={logo}
-                              alt="logo"
-                              className="w-10 h-10 rounded-lg object-contain p-1"
-                              style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
-                            />
-                          ) : (
-                            <div
-                              className="w-10 h-10 rounded-lg flex items-center justify-center"
-                              style={{ background: "var(--ora-signal-light)" }}>
-                              <Shield size={16} style={{ color: "var(--ora-signal)" }} />
-                            </div>
-                          )}
-                          <div>
-                            <h3 style={{ fontSize: "13px", fontWeight: 600, color: "var(--foreground)" }}>
-                              {vault.brand_name ?? vault.name}
-                            </h3>
-                            {vault.guidelines?.industry && (
-                              <p style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>{vault.guidelines.industry}</p>
-                            )}
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteVault(vault.id); }}
-                          className="transition-colors opacity-0 group-hover:opacity-100"
-                          style={{ color: "var(--muted-foreground)" }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                      {colors.length > 0 && (
-                        <div className="flex gap-1.5 mb-3">
-                          {colors.slice(0, 5).map((c, i) => (
-                            <div
-                              key={i}
-                              className="w-4 h-4 rounded-full"
-                              style={{ backgroundColor: c, border: "1px solid var(--border)" }}
-                              title={c}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between mt-1">
-                        <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>
-                          {new Date(vault.created_at).toLocaleDateString("fr-FR")}
-                        </span>
-                        <ChevronRight size={14} style={{ color: "var(--muted-foreground)" }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+              ))}
+            </div>
           </div>
+          <div>
+            <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Style</label>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {STYLE_OPTIONS.map(s => (
+                <button key={s} onClick={() => updateVault("tone_config", { ...vault.tone_config, style: s })}
+                  className="px-2.5 py-1 rounded-lg transition-all capitalize"
+                  style={{ fontSize: "12px", background: vault.tone_config?.style === s ? "var(--ora-signal)" : "var(--secondary)", color: vault.tone_config?.style === s ? "white" : "var(--foreground)", border: vault.tone_config?.style === s ? "none" : "1px solid var(--border)" }}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Formalité — {vault.tone_config?.formality ?? 3}/5
+          </label>
+          <input type="range" min={1} max={5} value={vault.tone_config?.formality ?? 3}
+            onChange={e => updateVault("tone_config", { ...vault.tone_config, formality: Number(e.target.value) })}
+            className="w-full mt-2" style={{ accentColor: "var(--ora-signal)" }} />
+          <div className="flex justify-between mt-1">
+            <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>Décontracté</span>
+            <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>Très formel</span>
+          </div>
+        </div>
+      </Section>
 
-          {campaigns.length > 0 && (
-            <div>
-              <h2 style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", marginBottom: "12px" }}>
-                Campagnes récentes
-              </h2>
-              <div className="space-y-2">
-                {campaigns.slice(0, 5).map((c) => (
-                  <div
-                    key={c.id}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 transition-all cursor-pointer"
-                    style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}
-                    onClick={() => { setActiveCampaign(c); setView("campaign_detail"); }}>
-                    <Sparkles size={14} style={{ color: "var(--ora-signal)" }} className="shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate" style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>{c.name}</p>
-                      <p className="truncate" style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>{c.brief}</p>
-                    </div>
-                    <span
-                      className="rounded-full px-2 py-0.5"
-                      style={
-                        c.status === "approved"
-                          ? { background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a", fontSize: "11px" }
-                          : { background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontSize: "11px" }
-                      }>
-                      {c.status}
-                    </span>
-                  </div>
-                ))}
+      <Section title="Palette de couleurs" icon={Palette}>
+        {(["primary", "secondary", "neutral"] as const).map(key => (
+          <div key={key} className="mt-4">
+            <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {key === "primary" ? "Couleurs primaires" : key === "secondary" ? "Secondaires" : "Neutres"}
+            </label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {(vault.palette?.[key] ?? []).map((c, i) => (
+                <ColorSwatch key={i} color={c} onRemove={() => removeColor(key, i)} />
+              ))}
+              <div className="flex items-center gap-1.5">
+                <input type="color" value={newColor[key] || "#000000"}
+                  onChange={e => setNewColor(c => ({ ...c, [key]: e.target.value }))}
+                  className="w-8 h-8 rounded cursor-pointer border-0" />
+                <input value={newColor[key]} onChange={e => setNewColor(c => ({ ...c, [key]: e.target.value }))}
+                  placeholder="#RRGGBB" className="w-24 px-2 py-1 rounded-lg outline-none"
+                  style={{ fontSize: "12px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+                <button onClick={() => addColor(key)} className="px-2.5 py-1 rounded-lg"
+                  style={{ fontSize: "12px", background: "var(--ora-signal)", color: "white" }}>+</button>
               </div>
             </div>
+          </div>
+        ))}
+      </Section>
+
+      <Section title="Typographies" icon={Type}>
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          {(["heading", "body"] as const).map(key => (
+            <div key={key}>
+              <label style={{ fontSize: "11px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {key === "heading" ? "Titres" : "Corps de texte"}
+              </label>
+              <select value={vault.typography?.[key] ?? "Inter"} onChange={e => updateVault("typography", { ...vault.typography, [key]: e.target.value })}
+                className="w-full mt-1.5 px-3 py-2 rounded-lg outline-none"
+                style={{ fontSize: "13px", background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)" }}>
+                {FONT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Personas cibles" icon={Users}>
+        <div className="space-y-3 mt-3">
+          {(vault.personas ?? []).map((p, i) => (
+            <div key={i} className="p-4 rounded-xl" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <div style={{ fontSize: "14px", fontWeight: 500, color: "var(--foreground)" }}>{p.name}</div>
+                  <div style={{ fontSize: "12px", color: "var(--muted-foreground)", marginTop: 2 }}>{p.profile}</div>
+                </div>
+                <button onClick={() => removePersona(i)}><X size={14} style={{ color: "var(--muted-foreground)" }} /></button>
+              </div>
+              {p.pains && <div className="mt-2" style={{ fontSize: "12px", color: "var(--muted-foreground)" }}><strong>Douleurs:</strong> {p.pains}</div>}
+              {p.motivations && <div style={{ fontSize: "12px", color: "var(--muted-foreground)" }}><strong>Motivations:</strong> {p.motivations}</div>}
+            </div>
+          ))}
+          {showPersonaForm ? (
+            <div className="p-4 rounded-xl space-y-2" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+              {(["name", "profile", "pains", "motivations"] as const).map(field => (
+                <input key={field} value={newPersona[field]} onChange={e => setNewPersona(p => ({ ...p, [field]: e.target.value }))}
+                  placeholder={{ name: "Nom du persona", profile: "Profil / poste", pains: "Douleurs principales", motivations: "Motivations" }[field]}
+                  className="w-full px-3 py-2 rounded-lg outline-none"
+                  style={{ fontSize: "13px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+              ))}
+              <div className="flex gap-2 pt-1">
+                <button onClick={addPersona} className="px-3 py-1.5 rounded-lg text-white" style={{ fontSize: "12px", background: "var(--ora-signal)" }}>Ajouter</button>
+                <button onClick={() => setShowPersonaForm(false)} className="px-3 py-1.5 rounded-lg"
+                  style={{ fontSize: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>Annuler</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowPersonaForm(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ fontSize: "13px", color: "var(--ora-signal)", background: "var(--ora-signal-light)", border: "none" }}>
+              <Plus size={14} />Ajouter un persona
+            </button>
           )}
         </div>
-      )}
+      </Section>
 
-      {/* ── CREATE VAULT ── */}
-      {view === "create_vault" && (
-        <div className="max-w-xl">
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--foreground)", marginBottom: "8px" }}>
-            Créer un nouveau vault
-          </h2>
-          <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginBottom: "24px" }}>
-            L'IA analyse votre site et extrait logo, couleurs, ton, concurrents, audience et plus.
-          </p>
-          <div className="space-y-4">
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                Nom du vault
-              </label>
-              <input
-                type="text"
-                value={vaultName}
-                onChange={(e) => setVaultName(e.target.value)}
-                placeholder="Ex: Ma Marque, Acme Corp..."
-                className="w-full rounded-xl px-4 py-3 focus:outline-none transition-colors"
-                style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                URLs à analyser (une par ligne)
-              </label>
-              <textarea
-                value={websiteUrls}
-                onChange={(e) => setWebsiteUrls(e.target.value)}
-                placeholder={"https://www.mamarque.com\nhttps://www.mamarque.com/a-propos\nhttps://www.mamarque.com/produits"}
-                rows={4}
-                className="w-full rounded-xl px-4 py-3 focus:outline-none resize-none transition-colors"
-                style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }}
-              />
-              <p style={{ fontSize: "11px", color: "var(--muted-foreground)", opacity: 0.7, marginTop: "4px" }}>
-                Ajoutez homepage + page À propos + pages produits pour une analyse complète.
-              </p>
-            </div>
-            {analyzeError && (
-              <div
-                className="rounded-xl px-4 py-3"
-                style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}>
-                {analyzeError}
-              </div>
-            )}
-            <button
-              onClick={handleAnalyzeAndCreate}
-              disabled={analyzing || !vaultName.trim() || !websiteUrls.trim()}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 transition-all disabled:opacity-40"
-              style={{ background: "var(--ora-signal)", color: "#ffffff", fontSize: "13px", fontWeight: 500 }}>
-              {analyzing ? (
-                <><Loader2 size={15} className="animate-spin" /> Analyse en cours…</>
-              ) : (
-                <><Globe size={15} /> Analyser et créer le vault</>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── VAULT DETAIL ── */}
-      {view === "vault_detail" && selectedVault && g && (
-        <div>
-          {/* Vault header */}
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              {g.logo_url ? (
-                <img
-                  src={g.logo_url}
-                  alt="logo"
-                  className="w-16 h-16 rounded-xl object-contain p-2"
-                  style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
-                />
-              ) : (
-                <div
-                  className="w-16 h-16 rounded-xl flex items-center justify-center"
-                  style={{ background: "var(--ora-signal-light)", border: "1px solid var(--border)" }}>
-                  <Shield size={24} style={{ color: "var(--ora-signal)" }} />
-                </div>
-              )}
-              <div>
-                <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--foreground)", letterSpacing: "-0.01em" }}>
-                  {selectedVault.brand_name ?? selectedVault.name}
-                </h2>
-                {g.industry && (
-                  <p style={{ fontSize: "13px", color: "var(--ora-signal)", marginTop: "2px" }}>{g.industry}</p>
-                )}
-                {selectedVault.website_url && (
-                  <a
-                    href={selectedVault.website_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="transition-colors"
-                    style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
-                    {selectedVault.website_url}
-                  </a>
-                )}
-              </div>
-            </div>
-            <button
-              onClick={() => setView("create_campaign")}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 transition-all"
-              style={{ background: "var(--ora-signal)", color: "#ffffff", fontSize: "13px", fontWeight: 500 }}>
-              <Plus size={15} />Nouvelle campagne
-            </button>
-          </div>
-
-          {/* Hero image */}
-          {g.hero_image && (
-            <div className="mb-4 rounded-xl overflow-hidden h-40" style={{ border: "1px solid var(--border)" }}>
-              <img src={g.hero_image} alt="hero" className="w-full h-full object-cover" />
-            </div>
-          )}
-
-          {/* Brand summary */}
-          {g.brand_summary && (
-            <div
-              className="rounded-xl p-4 mb-4"
-              style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-              <p style={{ fontSize: "13px", color: "var(--foreground)", lineHeight: "1.6", fontStyle: "italic" }}>
-                "{g.brand_summary}"
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            {/* Editorial */}
-            {g.editorial && (
-              <div
-                className="rounded-xl p-4"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <BookOpen size={14} style={{ color: "#8b5cf6" }} />
-                  <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Charte éditoriale</h3>
-                </div>
-                <div className="space-y-2">
-                  {g.editorial.tone && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Ton : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.editorial.tone}</span>
-                    </div>
-                  )}
-                  {g.editorial.formality && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Formalité : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.editorial.formality}</span>
-                    </div>
-                  )}
-                  {g.editorial.language_style && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Style : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.editorial.language_style}</span>
-                    </div>
-                  )}
-                  {g.editorial.tagline && (
-                    <div
-                      className="rounded-lg px-3 py-2 mt-2"
-                      style={{ background: "var(--ora-signal-light)", border: "1px solid var(--ora-signal-ring)" }}>
-                      <span style={{ fontSize: "11px", fontWeight: 500, color: "var(--ora-signal)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                        Tagline
-                      </span>
-                      <p style={{ fontSize: "13px", fontStyle: "italic", color: "var(--foreground)", marginTop: "2px" }}>
-                        "{g.editorial.tagline}"
-                      </p>
-                    </div>
-                  )}
-                  {g.editorial.key_messages && g.editorial.key_messages.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>Messages clés :</span>
-                      <ul className="mt-1 space-y-1">
-                        {g.editorial.key_messages.map((m, i) => (
-                          <li key={i} style={{ fontSize: "12px", color: "var(--foreground)" }}>• {m}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {g.editorial.vocabulary_approved && g.editorial.vocabulary_approved.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Vocabulaire ✓</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {g.editorial.vocabulary_approved.map((w, i) => (
-                          <span
-                            key={i}
-                            className="rounded-full px-2 py-0.5"
-                            style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a", fontSize: "11px" }}>
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {g.editorial.vocabulary_forbidden && g.editorial.vocabulary_forbidden.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>À éviter ✗</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {g.editorial.vocabulary_forbidden.map((w, i) => (
-                          <span
-                            key={i}
-                            className="rounded-full px-2 py-0.5"
-                            style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "11px" }}>
-                            {w}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Visual */}
-            {g.visual && (
-              <div
-                className="rounded-xl p-4"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Palette size={14} style={{ color: "#10b981" }} />
-                  <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Charte visuelle</h3>
-                </div>
-                <div className="space-y-2">
-                  {g.visual.primary_colors && g.visual.primary_colors.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Couleurs primaires</span>
-                      <div className="flex gap-2 mt-1 flex-wrap">
-                        {g.visual.primary_colors.map((color, i) => (
-                          <div key={i} className="flex items-center gap-1.5">
-                            <div
-                              className="w-6 h-6 rounded"
-                              style={{ backgroundColor: color, border: "1px solid var(--border)" }}
-                            />
-                            <span style={{ fontSize: "11px", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{color}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {g.visual.secondary_colors && g.visual.secondary_colors.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Couleurs secondaires</span>
-                      <div className="flex gap-2 mt-1 flex-wrap">
-                        {g.visual.secondary_colors.map((color, i) => (
-                          <div key={i} className="flex items-center gap-1.5">
-                            <div
-                              className="w-5 h-5 rounded"
-                              style={{ backgroundColor: color, border: "1px solid var(--border)" }}
-                            />
-                            <span style={{ fontSize: "11px", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{color}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {g.visual.style && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Style : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.visual.style}</span>
-                    </div>
-                  )}
-                  {g.visual.imagery_style && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Images : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.visual.imagery_style}</span>
-                    </div>
-                  )}
-                  {g.visual.typography_style && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Typo : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.visual.typography_style}</span>
-                    </div>
-                  )}
-                  {g.visual.avoid && g.visual.avoid.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>À éviter :</span>
-                      <ul className="mt-1">
-                        {g.visual.avoid.map((a, i) => (
-                          <li key={i} style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>• {a}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Audience */}
-            {g.audience && (
-              <div
-                className="rounded-xl p-4"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Users size={14} style={{ color: "#3b82f6" }} />
-                  <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Audience cible</h3>
-                </div>
-                <div className="space-y-2">
-                  {g.audience.primary && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Primaire : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.audience.primary}</span>
-                    </div>
-                  )}
-                  {g.audience.secondary && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Secondaire : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.audience.secondary}</span>
-                    </div>
-                  )}
-                  {g.audience.age_range && (
-                    <div style={{ fontSize: "13px" }}>
-                      <span style={{ color: "var(--muted-foreground)" }}>Âge : </span>
-                      <span style={{ color: "var(--foreground)" }}>{g.audience.age_range}</span>
-                    </div>
-                  )}
-                  {g.audience.values && g.audience.values.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Valeurs :</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {g.audience.values.map((v, i) => (
-                          <span
-                            key={i}
-                            className="rounded-full px-2 py-0.5"
-                            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)", color: "#2563eb", fontSize: "11px" }}>
-                            {v}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {g.audience.pain_points && g.audience.pain_points.length > 0 && (
-                    <div>
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Points de douleur :</span>
-                      <ul className="mt-1">
-                        {g.audience.pain_points.map((p, i) => (
-                          <li key={i} style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>• {p}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Competitors + Products */}
-            <div className="space-y-4">
-              {g.competitors && g.competitors.length > 0 && (
-                <div
-                  className="rounded-xl p-4"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp size={14} style={{ color: "#f59e0b" }} />
-                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Concurrents identifiés</h3>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {g.competitors.map((c, i) => (
-                      <span
-                        key={i}
-                        className="rounded-full px-3 py-1"
-                        style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", color: "#b45309", fontSize: "12px" }}>
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {g.products_services && g.products_services.length > 0 && (
-                <div
-                  className="rounded-xl p-4"
-                  style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Building2 size={14} style={{ color: "#06b6d4" }} />
-                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Produits & Services</h3>
-                  </div>
-                  <ul className="space-y-1">
-                    {g.products_services.map((p, i) => (
-                      <li key={i} className="flex items-center gap-2" style={{ fontSize: "12px", color: "var(--foreground)" }}>
-                        <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: "#06b6d4" }} />{p}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Content guidelines */}
-            {g.content_guidelines && (g.content_guidelines.do?.length || g.content_guidelines.dont?.length) && (
-              <div
-                className="rounded-xl p-4"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Target size={14} style={{ color: "#f43f5e" }} />
-                  <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Bonnes pratiques</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {g.content_guidelines.do && g.content_guidelines.do.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1 mb-2">
-                        <CheckCircle size={12} style={{ color: "#16a34a" }} />
-                        <span style={{ fontSize: "11px", fontWeight: 500, color: "#16a34a" }}>À faire</span>
-                      </div>
-                      <ul className="space-y-1">
-                        {g.content_guidelines.do.map((d, i) => (
-                          <li key={i} style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>• {d}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {g.content_guidelines.dont && g.content_guidelines.dont.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1 mb-2">
-                        <XCircle size={12} style={{ color: "var(--destructive)" }} />
-                        <span style={{ fontSize: "11px", fontWeight: 500, color: "var(--destructive)" }}>À éviter</span>
-                      </div>
-                      <ul className="space-y-1">
-                        {g.content_guidelines.dont.map((d, i) => (
-                          <li key={i} style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>• {d}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                {g.content_guidelines.video_style && (
-                  <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border)" }}>
-                    <div className="flex items-center gap-1 mb-1">
-                      <Video size={12} style={{ color: "#f43f5e" }} />
-                      <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>Style vidéo</span>
-                    </div>
-                    <p style={{ fontSize: "12px", color: "var(--foreground)" }}>{g.content_guidelines.video_style}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Social media */}
-            {g.social_media && Object.keys(g.social_media).length > 0 && (
-              <div
-                className="rounded-xl p-4"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Share2 size={14} style={{ color: "#ec4899" }} />
-                  <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>Réseaux sociaux</h3>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(g.social_media).map(([network, url]) => (
-                    <a
-                      key={network}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-lg px-3 py-1.5 transition-all"
-                      style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "12px" }}>
-                      <span style={{ color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "11px" }}>
-                        {SOCIAL_ICONS[network] ?? network.slice(0, 2).toUpperCase()}
-                      </span>
-                      {network}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── CREATE CAMPAIGN ── */}
-      {view === "create_campaign" && selectedVault && (
-        <div className="max-w-2xl">
-          <h2 style={{ fontSize: "16px", fontWeight: 600, color: "var(--foreground)", marginBottom: "8px" }}>
-            Nouvelle campagne
-          </h2>
-          <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginBottom: "24px" }}>
-            Vault :{" "}
-            <span style={{ color: "var(--ora-signal)" }}>{selectedVault.brand_name ?? selectedVault.name}</span>
-          </p>
-          <div className="space-y-4">
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                Nom de la campagne
-              </label>
-              <input
-                type="text"
-                value={campaignName}
-                onChange={(e) => setCampaignName(e.target.value)}
-                placeholder="Ex: Lancement Produit Été 2025"
-                className="w-full rounded-xl px-4 py-3 focus:outline-none transition-colors"
-                style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                Brief de campagne
-              </label>
-              <textarea
-                value={campaignBrief}
-                onChange={(e) => setCampaignBrief(e.target.value)}
-                placeholder="Décrivez l'objectif, le message principal, le public visé, le ton souhaité..."
-                rows={4}
-                className="w-full rounded-xl px-4 py-3 focus:outline-none resize-none transition-colors"
-                style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "8px" }}>
-                URL produit (optionnel)
-              </label>
-              <input
-                type="url"
-                value={productUrl}
-                onChange={(e) => setProductUrl(e.target.value)}
-                placeholder="https://www.mamarque.com/produit"
-                className="w-full rounded-xl px-4 py-3 focus:outline-none transition-colors"
-                style={{ background: "var(--input-background)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }}
-              />
-              <p style={{ fontSize: "11px", color: "var(--muted-foreground)", opacity: 0.7, marginTop: "4px" }}>
-                Le contenu de la page sera analysé pour enrichir les assets.
-              </p>
-            </div>
-            <div>
-              <label style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", color: "var(--muted-foreground)", textTransform: "uppercase", display: "block", marginBottom: "12px" }}>
-                Assets à générer
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "text", label: "Textes", icon: Sparkles },
-                  { id: "image_prompt", label: "Prompts Images", icon: ImageIcon },
-                  { id: "video_prompt", label: "Prompts Vidéo", icon: Video },
-                ].map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    onClick={() => setAssetTypes((prev) => prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id])}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
-                    style={
-                      assetTypes.includes(id)
-                        ? { background: "var(--ora-signal-light)", color: "var(--ora-signal)", border: "1px solid var(--ora-signal-ring)", fontSize: "13px" }
-                        : { background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--foreground)", fontSize: "13px" }
-                    }>
-                    <Icon size={14} />{label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {genError && (
-              <div
-                className="rounded-xl px-4 py-3"
-                style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}>
-                {genError}
-              </div>
-            )}
-            <button
-              onClick={handleCreateCampaign}
-              disabled={generating || !campaignName.trim() || !campaignBrief.trim() || assetTypes.length === 0}
-              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 transition-all disabled:opacity-40"
-              style={{ background: "var(--ora-signal)", color: "#ffffff", fontSize: "13px", fontWeight: 500 }}>
-              {generating ? (
-                <><Loader2 size={15} className="animate-spin" /> Génération en cours…</>
-              ) : (
-                <><Sparkles size={15} /> Générer la campagne</>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── CAMPAIGN DETAIL ── */}
-      {view === "campaign_detail" && activeCampaign && (
-        <div>
-          <div className="mb-6">
-            <h2 style={{ fontSize: "18px", fontWeight: 700, color: "var(--foreground)", letterSpacing: "-0.01em" }}>
-              {activeCampaign.name}
-            </h2>
-            <p style={{ fontSize: "13px", color: "var(--muted-foreground)", marginTop: "4px" }}>{activeCampaign.brief}</p>
-          </div>
-          <div className="space-y-4">
-            {activeCampaign.assets?.map((asset, i) => (
-              <div
-                key={i}
-                className="rounded-xl p-5"
-                style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
-                <div className="flex items-center justify-between mb-3">
+      <Section title="Produits & Services" icon={Package}>
+        <div className="space-y-3 mt-3">
+          {(vault.products ?? []).map((p, i) => (
+            <div key={p.id ?? i} className="p-4 rounded-xl" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+              <div className="flex items-start justify-between">
+                <div>
                   <div className="flex items-center gap-2">
-                    {asset.type === "text" && <Sparkles size={14} style={{ color: "#8b5cf6" }} />}
-                    {asset.type === "image_prompts" && <ImageIcon size={14} style={{ color: "#10b981" }} />}
-                    {asset.type === "video_prompts" && <Video size={14} style={{ color: "#f43f5e" }} />}
-                    <h3 style={{ fontSize: "13px", fontWeight: 500, color: "var(--foreground)" }}>
-                      {asset.type === "text" ? "Contenus texte" :
-                       asset.type === "image_prompts" ? "Prompts Images" : "Prompts Vidéo"}
-                    </h3>
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--foreground)" }}>{p.name}</span>
+                    {p.is_primary && (
+                      <span className="px-1.5 py-0.5 rounded text-white"
+                        style={{ fontSize: "9px", fontWeight: 600, background: "var(--ora-signal)" }}>INCLUS</span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(asset.content)}
-                    className="rounded-lg px-3 py-1 transition-all"
-                    style={{ background: "var(--secondary)", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontSize: "12px" }}>
-                    Copier
-                  </button>
+                  <div style={{ fontSize: "12px", color: "var(--muted-foreground)", marginTop: 2 }}>{p.description}</div>
                 </div>
-                <div className="rounded-lg p-4" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
-                  <pre style={{ fontSize: "13px", color: "var(--foreground)", whiteSpace: "pre-wrap", fontFamily: "sans-serif", lineHeight: "1.6" }}>
-                    {asset.content}
-                  </pre>
-                </div>
+                {p.id && <button onClick={() => deleteProduct(p.id!)}><Trash2 size={14} style={{ color: "var(--muted-foreground)" }} /></button>}
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+          {showProductForm ? (
+            <div className="p-4 rounded-xl space-y-2" style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}>
+              {(vault.products ?? []).length > 0 && (
+                <div className="flex items-center gap-2 p-3 rounded-lg mb-2"
+                  style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)" }}>
+                  <AlertCircle size={13} style={{ color: "#f97316" }} />
+                  <span style={{ fontSize: "12px", color: "#f97316" }}>Produit supplémentaire — 500 crédits débités</span>
+                </div>
+              )}
+              <input value={newProduct.name} onChange={e => setNewProduct(p => ({ ...p, name: e.target.value }))}
+                placeholder="Nom du produit / service" className="w-full px-3 py-2 rounded-lg outline-none"
+                style={{ fontSize: "13px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+              <textarea value={newProduct.description} onChange={e => setNewProduct(p => ({ ...p, description: e.target.value }))}
+                placeholder="Description du produit…" rows={2}
+                className="w-full px-3 py-2 rounded-lg outline-none resize-none"
+                style={{ fontSize: "13px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }} />
+              <div className="flex gap-2 pt-1">
+                <button onClick={addProduct} disabled={addingProduct}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white"
+                  style={{ fontSize: "12px", background: "var(--ora-signal)", opacity: addingProduct ? 0.7 : 1 }}>
+                  {addingProduct ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                  {(vault.products ?? []).length > 0 ? "Ajouter (500 cr)" : "Ajouter"}
+                </button>
+                <button onClick={() => setShowProductForm(false)} className="px-3 py-1.5 rounded-lg"
+                  style={{ fontSize: "12px", background: "var(--card)", border: "1px solid var(--border)", color: "var(--muted-foreground)" }}>Annuler</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowProductForm(true)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{ fontSize: "13px", color: "var(--ora-signal)", background: "var(--ora-signal-light)", border: "none" }}>
+              <Plus size={14} />
+              {(vault.products ?? []).length === 0 ? "Ajouter un produit (inclus)" : "Produit supplémentaire (+500 cr)"}
+            </button>
+          )}
         </div>
-      )}
+      </Section>
     </div>
   );
 }

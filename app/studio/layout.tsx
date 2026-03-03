@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { getCredits } from "@/lib/credits";
 import Sidebar from "@/components/Sidebar";
 
 export default async function StudioLayout({
@@ -14,14 +13,20 @@ export default async function StudioLayout({
   if (!user) redirect("/login");
 
   const admin = createAdminClient();
-  const [credits, { data: profile }] = await Promise.all([
-    getCredits(user.id),
-    admin.from("profiles").select("role").eq("id", user.id).single(),
-  ]);
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("credits, role, plan")
+    .eq("id", user.id)
+    .single();
 
   return (
-    <div className="flex min-h-screen bg-bg text-white">
-      <Sidebar credits={credits} email={user.email ?? ""} role={profile?.role} />
+    <div className="flex min-h-screen" style={{ background: "var(--background)" }}>
+      <Sidebar
+        credits={profile?.credits ?? 0}
+        email={user.email ?? ""}
+        role={profile?.role}
+        plan={profile?.plan ?? "trial"}
+      />
       <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getCredits, CREDIT_COSTS } from "@/lib/credits";
+import { NextResponse } from "next/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { CREDIT_COSTS } from "@/lib/credits";
 
 export async function GET() {
   try {
@@ -10,8 +10,20 @@ export async function GET() {
       return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
     }
 
-    const credits = await getCredits(user.id);
-    return NextResponse.json({ credits, costs: CREDIT_COSTS });
+    const admin = createAdminClient();
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("credits, plan, stripe_customer_id, stripe_subscription_id")
+      .eq("id", user.id)
+      .single();
+
+    return NextResponse.json({
+      credits: profile?.credits ?? 0,
+      plan: profile?.plan ?? "trial",
+      stripe_customer_id: profile?.stripe_customer_id,
+      stripe_subscription_id: profile?.stripe_subscription_id,
+      costs: CREDIT_COSTS,
+    });
   } catch (err) {
     console.error("[credits/get]", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { clsx } from "clsx";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { PulseIcon } from "@/components/landing/PulseMotif";
 
 function GoogleIcon() {
   return (
@@ -65,7 +65,6 @@ export default function LoginPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Une erreur est survenue";
-      // Translate common Supabase errors
       if (msg.includes("Invalid login credentials")) {
         setError("Email ou mot de passe incorrect");
       } else if (msg.includes("User already registered")) {
@@ -81,138 +80,176 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      {/* Background glow */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-sm relative">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: "var(--background)" }}
+    >
+      <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mb-4 shadow-lg shadow-primary/30">
-            <Sparkles size={22} className="text-white" />
+          <div className="mb-4">
+            <PulseIcon size={40} />
           </div>
-          <h1 className="text-white font-bold text-2xl tracking-tight">Ora Studio</h1>
-          <p className="text-zinc-500 text-sm mt-1">Générez. Créez. Innovez.</p>
+          <h1 style={{ fontSize: "20px", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--foreground)" }}>
+            ORA Studio
+          </h1>
+          <p style={{ fontSize: "14px", color: "var(--muted-foreground)", marginTop: "4px" }}>
+            Your Brand. Amplified.
+          </p>
         </div>
 
         {/* Card */}
-        <div className="bg-surface border border-border/50 rounded-2xl p-6">
+        <div
+          className="rounded-2xl p-6"
+          style={{ background: "var(--card)", border: "1px solid var(--border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 12px 48px rgba(0,0,0,0.05)" }}
+        >
           {/* Tabs */}
-          <div className="flex rounded-lg bg-surface2 p-0.5 mb-6">
-            <button
-              onClick={() => { setMode("login"); setError(""); }}
-              className={clsx(
-                "flex-1 py-1.5 text-sm font-medium rounded-md transition-all",
-                mode === "login" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
-              )}
-            >
-              Connexion
-            </button>
-            <button
-              onClick={() => { setMode("register"); setError(""); }}
-              className={clsx(
-                "flex-1 py-1.5 text-sm font-medium rounded-md transition-all",
-                mode === "register" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300"
-              )}
-            >
-              Inscription
-            </button>
+          <div
+            className="flex rounded-lg p-0.5 mb-6"
+            style={{ background: "var(--secondary)" }}
+          >
+            {(["login", "register"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(""); }}
+                className="flex-1 py-1.5 rounded-md transition-all"
+                style={{
+                  fontSize: "13px",
+                  fontWeight: mode === m ? 500 : 400,
+                  color: mode === m ? "var(--foreground)" : "var(--muted-foreground)",
+                  background: mode === m ? "var(--card)" : "transparent",
+                  boxShadow: mode === m ? "0 1px 2px rgba(0,0,0,0.06)" : "none",
+                }}
+              >
+                {m === "login" ? "Connexion" : "Inscription"}
+              </button>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="text-zinc-400 text-xs mb-1.5 block">Email</label>
+              <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "6px" }}>
+                Email
+              </label>
               <div className="relative">
-                <Mail size={15} className="absolute left-3 top-3 text-zinc-500" />
+                <Mail size={14} className="absolute left-3 top-3" style={{ color: "var(--muted-foreground)" }} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="vous@exemple.com"
                   required
-                  className="w-full bg-surface2 border border-border/40 text-white text-sm rounded-lg pl-9 pr-3 py-2.5 focus:outline-none focus:border-primary placeholder-zinc-600 transition-colors"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-lg outline-none transition-colors"
+                  style={{
+                    fontSize: "14px",
+                    background: "var(--input-background)",
+                    border: "1px solid var(--border)",
+                    color: "var(--foreground)",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="text-zinc-400 text-xs mb-1.5 block">Mot de passe</label>
+              <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "6px" }}>
+                Mot de passe
+              </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3 top-3 text-zinc-500" />
+                <Lock size={14} className="absolute left-3 top-3" style={{ color: "var(--muted-foreground)" }} />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === "register" ? "Min. 6 caractères" : "••••••••"}
                   required
-                  className="w-full bg-surface2 border border-border/40 text-white text-sm rounded-lg pl-9 pr-10 py-2.5 focus:outline-none focus:border-primary placeholder-zinc-600 transition-colors"
+                  className="w-full pl-9 pr-10 py-2.5 rounded-lg outline-none transition-colors"
+                  style={{
+                    fontSize: "14px",
+                    background: "var(--input-background)",
+                    border: "1px solid var(--border)",
+                    color: "var(--foreground)",
+                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-3 transition-colors"
+                  style={{ color: "var(--muted-foreground)" }}
                 >
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
 
-            {/* Error */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-lg px-3 py-2">
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}
+              >
                 {error}
               </div>
             )}
 
-            {/* Success message */}
             {message && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-lg px-3 py-2">
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", color: "#16a34a", fontSize: "13px" }}
+              >
                 {message}
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-lg transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
+              style={{ fontSize: "14px", fontWeight: 500, background: "var(--primary)", color: "var(--primary-foreground)" }}
             >
               {loading ? (
-                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /></>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 mode === "login" ? "Se connecter" : "Créer mon compte"
               )}
             </button>
           </form>
 
-          {/* Divider */}
           <div className="flex items-center gap-3 my-4">
-            <div className="flex-1 h-px bg-border/40" />
-            <span className="text-zinc-600 text-xs">ou</span>
-            <div className="flex-1 h-px bg-border/40" />
+            <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+            <span style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>ou</span>
+            <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
           </div>
 
-          {/* Google OAuth */}
           <button
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading}
-            className="w-full bg-surface2 hover:bg-white/5 border border-border/40 text-white font-medium py-2.5 rounded-lg text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2.5"
+            className="w-full py-2.5 rounded-lg transition-colors disabled:opacity-60 flex items-center justify-center gap-2.5"
+            style={{
+              fontSize: "14px",
+              fontWeight: 500,
+              background: "var(--card)",
+              border: "1px solid var(--border-strong)",
+              color: "var(--foreground)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--secondary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "var(--card)"; }}
           >
             {googleLoading ? (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
             ) : (
               <><GoogleIcon />Continuer avec Google</>
             )}
           </button>
 
           {mode === "register" && (
-            <p className="text-zinc-600 text-xs text-center mt-4">
-              Vous recevrez 100 crédits gratuits à l&apos;inscription.
+            <p className="text-center mt-4" style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
+              100 crédits offerts à l&apos;inscription.
             </p>
           )}
         </div>

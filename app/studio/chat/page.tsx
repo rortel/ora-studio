@@ -80,50 +80,64 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen" style={{ background: "var(--background)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-surface shrink-0">
+      <div
+        className="flex items-center justify-between px-6 py-4 shrink-0"
+        style={{ background: "var(--card)", borderBottom: "1px solid var(--border)" }}
+      >
         <div className="flex items-center gap-2">
-          <Bot size={20} className="text-primary" />
-          <h1 className="text-white font-semibold">Agrégateur IA</h1>
+          <Bot size={18} style={{ color: "var(--ora-signal)" }} />
+          <h1 style={{ fontSize: "15px", fontWeight: 500, color: "var(--foreground)" }}>Agrégateur IA</h1>
         </div>
         <div className="flex items-center gap-3">
           {creditsLeft !== null && (
-            <span className="text-xs text-zinc-500">{creditsLeft} crédits</span>
+            <span style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>{creditsLeft} crédits</span>
           )}
           <button
             onClick={() => setMessages([])}
-            className="text-zinc-500 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-white/5"
+            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--secondary)]"
+            style={{ color: "var(--muted-foreground)" }}
             title="Effacer la conversation"
           >
-            <Trash2 size={15} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
       {/* Model selector */}
-      <div className="flex gap-2 px-6 py-3 border-b border-border/30 overflow-x-auto shrink-0">
+      <div
+        className="flex gap-1.5 px-6 py-3 overflow-x-auto shrink-0"
+        style={{ borderBottom: "1px solid var(--border)", background: "var(--card)" }}
+      >
         {CHAT_MODELS.map((m) => (
           <button
             key={m.id}
             onClick={() => setSelectedModel(m.id)}
             className={clsx(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all border",
-              selectedModel === m.id
-                ? "bg-primary/15 border-primary/30 text-primary"
-                : "border-border/30 text-zinc-400 hover:text-white hover:border-border"
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg whitespace-nowrap transition-all",
             )}
+            style={{
+              fontSize: "12px",
+              fontWeight: selectedModel === m.id ? 500 : 400,
+              border: `1px solid ${selectedModel === m.id ? "var(--ora-signal-ring)" : "var(--border)"}`,
+              background: selectedModel === m.id ? "var(--ora-signal-light)" : "transparent",
+              color: selectedModel === m.id ? "var(--ora-signal)" : "var(--muted-foreground)",
+            }}
           >
             <span className={clsx("text-[10px] px-1.5 py-0.5 rounded", PROVIDER_COLORS[m.provider])}>
               {PROVIDER_LABELS[m.provider]}
             </span>
             {m.label}
             {m.badge && (
-              <span className="bg-zinc-700 text-zinc-300 px-1.5 py-0.5 rounded text-[10px]">
+              <span
+                className="px-1.5 py-0.5 rounded"
+                style={{ fontSize: "10px", background: "var(--secondary)", color: "var(--muted-foreground)" }}
+              >
                 {m.badge}
               </span>
             )}
-            <span className="text-zinc-600">{m.creditCost}cr</span>
+            <span style={{ color: "var(--muted-foreground)" }}>{m.creditCost}cr</span>
           </button>
         ))}
       </div>
@@ -132,13 +146,18 @@ export default function ChatPage() {
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-              <Bot size={32} className="text-primary" />
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+              style={{ background: "var(--ora-signal-light)" }}
+            >
+              <Bot size={28} style={{ color: "var(--ora-signal)" }} />
             </div>
-            <h2 className="text-white font-semibold text-lg mb-2">
-              Modèle actif : {selectedModelConfig.label}
+            <h2 style={{ fontSize: "16px", fontWeight: 500, color: "var(--foreground)", marginBottom: "8px" }}>
+              {selectedModelConfig.label}
             </h2>
-            <p className="text-zinc-500 text-sm max-w-sm">{selectedModelConfig.description}</p>
+            <p style={{ fontSize: "14px", color: "var(--muted-foreground)", maxWidth: "320px" }}>
+              {selectedModelConfig.description}
+            </p>
           </div>
         )}
 
@@ -148,27 +167,31 @@ export default function ChatPage() {
             className={clsx("flex gap-3", msg.role === "user" ? "justify-end" : "justify-start")}
           >
             {msg.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0 mt-0.5">
-                <Bot size={14} className="text-primary" />
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                style={{ background: "var(--ora-signal-light)" }}
+              >
+                <Bot size={13} style={{ color: "var(--ora-signal)" }} />
               </div>
             )}
             <div
-              className={clsx(
-                "max-w-[75%] rounded-2xl px-4 py-3 text-sm",
-                msg.role === "user"
-                  ? "bg-primary text-white rounded-tr-sm"
-                  : "bg-surface border border-border/40 text-zinc-200 rounded-tl-sm"
-              )}
+              className={clsx("max-w-[75%] rounded-2xl px-4 py-3", msg.role === "user" ? "rounded-tr-sm" : "rounded-tl-sm")}
+              style={{
+                fontSize: "14px",
+                background: msg.role === "user" ? "var(--primary)" : "var(--card)",
+                color: msg.role === "user" ? "var(--primary-foreground)" : "var(--foreground)",
+                border: msg.role === "assistant" ? "1px solid var(--border)" : "none",
+              }}
             >
               {msg.role === "assistant" ? (
-                <div className="prose prose-invert prose-sm max-w-none">
+                <div className="prose prose-sm max-w-none" style={{ color: "var(--foreground)" }}>
                   <ReactMarkdown>{msg.content || (loading && i === messages.length - 1 ? "▋" : "")}</ReactMarkdown>
                 </div>
               ) : (
                 msg.content
               )}
               {msg.model && (
-                <div className="mt-2 text-[10px] text-zinc-500">
+                <div className="mt-2" style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>
                   {CHAT_MODELS.find((m) => m.id === msg.model)?.label ?? msg.model}
                 </div>
               )}
@@ -179,7 +202,10 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-4 border-t border-border/50 bg-surface shrink-0">
+      <div
+        className="px-6 py-4 shrink-0"
+        style={{ background: "var(--card)", borderTop: "1px solid var(--border)" }}
+      >
         <div className="flex gap-3 items-end">
           <textarea
             ref={textareaRef}
@@ -188,8 +214,17 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Écrivez votre message… (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
             rows={1}
-            className="flex-1 bg-surface2 border border-border/40 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-primary placeholder-zinc-600 resize-none transition-colors"
-            style={{ minHeight: "44px", maxHeight: "200px" }}
+            className="flex-1 rounded-xl px-4 py-3 outline-none resize-none transition-colors"
+            style={{
+              fontSize: "14px",
+              minHeight: "44px",
+              maxHeight: "200px",
+              background: "var(--input-background)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
             onInput={(e) => {
               const t = e.currentTarget;
               t.style.height = "auto";
@@ -199,12 +234,13 @@ export default function ChatPage() {
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="bg-primary hover:bg-primary/80 disabled:opacity-40 text-white p-3 rounded-xl transition-all shrink-0"
+            className="p-3 rounded-xl transition-all disabled:opacity-40 shrink-0"
+            style={{ background: "var(--ora-signal)", color: "#ffffff" }}
           >
             {loading ? (
               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin block" />
             ) : (
-              <Send size={16} />
+              <Send size={15} />
             )}
           </button>
         </div>

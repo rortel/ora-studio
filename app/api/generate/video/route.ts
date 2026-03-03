@@ -1,13 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { checkAndDeductCredits, saveGeneration } from "@/lib/credits";
+import { checkAndDeductCredits } from "@/lib/credits";
 import Replicate from "replicate";
 
 export async function POST(request: Request) {
   const cookieStore = cookies();
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? "",
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? "",
     {
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -28,6 +28,13 @@ export async function POST(request: Request) {
     duration?: number;
   };
 
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return new Response(JSON.stringify({ error: "REPLICATE_API_TOKEN non configuré" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const credits = await checkAndDeductCredits(user.id, "video");
   if (!credits.success) {
     return new Response(JSON.stringify({ error: credits.error }), {
@@ -36,56 +43,20 @@ export async function POST(request: Request) {
     });
   }
 
-  if (!process.env.REPLICATE_API_TOKEN) {
-    return new Response(JSON.stringify({ error: "REPLICATE_API_TOKEN non configuré" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
   const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
-  try {
-    // Use minimax/video-01 for text-to-video generation
-    const output = await replicate.run(
-      "minimax/video-01" as `${string}/${string}`,
-      {
-        input: {
-          prompt,
-          prompt_optimizer: true,
-        },
-      }
-    );
+  // Start prediction asynchronously — do NOT await completion (Vercel timeout)
+  const prediction = await replicate.predictions.create({
+    model: "wavespeedai/wan-2.1-t2v-480p",
+    input: {
+      prompt,
+      num_frames: Math.min(81, duration * 16),
+      fps: 16,
+    },
+  });
 
-    const videoUrl = Array.isArray(output) ? output[0] : String(output);
-    saveGeneration(user.id, "video", prompt, videoUrl, "minimax/video-01").catch(() => {});
-
-    return new Response(JSON.stringify({ url: videoUrl, model: "minimax/video-01", creditsRemaining: credits.remaining }), {
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (err) {
-    // Fallback: try wan-i2v
-    try {
-      const output = await replicate.run(
-        "wavespeedai/wan-2.1-t2v-480p" as `${string}/${string}`,
-        {
-          input: {
-            prompt,
-            num_frames: duration * 8,
-          },
-        }
-      );
-      const videoUrl = Array.isArray(output) ? output[0] : String(output);
-      saveGeneration(user.id, "video", prompt, videoUrl, "wan-2.1-t2v").catch(() => {});
-
-      return new Response(JSON.stringify({ url: videoUrl, model: "wan-2.1-t2v", creditsRemaining: credits.remaining }), {
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (err2) {
-      return new Response(JSON.stringify({ error: String(err2) }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-  }
+  return new Response(
+    JSON.stringify({ predictionId: prediction.id, creditsRemaining: credits.remaining }),
+    { headers: { "Content-Type": "application/json" } }
+  );
 }

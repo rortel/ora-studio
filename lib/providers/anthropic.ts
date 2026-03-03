@@ -1,13 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { ChatMessage } from "./index";
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
-
 export async function streamAnthropic(
   model: string,
   messages: ChatMessage[],
   onChunk: (text: string) => void
 ): Promise<void> {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const systemMessage = messages.find((m) => m.role === "system");
   const chatMessages = messages
     .filter((m) => m.role !== "system")

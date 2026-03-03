@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
     } else if (ext === "pdf") {
       // PDF — use pdf-parse (avoids Next.js test file issue by loading lib directly)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+      const pdfParse = require("pdf-parse");
       const data = await pdfParse(buffer);
       text = data.text;
 

@@ -211,8 +211,32 @@ export default function ProductionPage() {
     setIsExtracting(false);
   };
 
+  // ── Poll Replicate prediction ─────────────────────────────────────────────
+  const pollImage = useCallback(async (sceneId: string, predictionId: string, prompt: string) => {
+    const encoded = encodeURIComponent(prompt);
+    for (let i = 0; i < 60; i++) {
+      await new Promise((r) => setTimeout(r, 2000));
+      try {
+        const res = await fetch(`/api/predictions/${predictionId}?prompt=${encoded}&type=image`);
+        const data = await res.json();
+        if (data.status === "succeeded") {
+          const url = Array.isArray(data.output) ? data.output[0] : data.output;
+          setScenes((prev) =>
+            prev.map((s) => s.id === sceneId ? { ...s, image_url: url, status: "ready" } : s)
+          );
+          return;
+        }
+        if (data.status === "failed" || data.error) {
+          updateScene(sceneId, { status: "draft" });
+          return;
+        }
+      } catch { /* keep polling on transient errors */ }
+    }
+    updateScene(sceneId, { status: "draft" });
+  }, [updateScene]);
+
   // ── Generate image for one scene ──────────────────────────────────────────
-  const handleGenerate = async (sceneId: string) => {
+  const handleGenerate = useCallback(async (sceneId: string) => {
     const scene = scenes.find((s) => s.id === sceneId);
     if (!scene?.visual_prompt) return;
     updateScene(sceneId, { status: "generating" });
@@ -224,13 +248,20 @@ export default function ProductionPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setScenes((prev) =>
-        prev.map((s) => s.id === sceneId ? { ...s, image_url: data.url, status: "ready" } : s)
-      );
+      // DALL-E returns url directly; Replicate returns predictionId
+      if (data.url) {
+        setScenes((prev) =>
+          prev.map((s) => s.id === sceneId ? { ...s, image_url: data.url, status: "ready" } : s)
+        );
+      } else if (data.predictionId) {
+        await pollImage(sceneId, data.predictionId, scene.visual_prompt);
+      } else {
+        updateScene(sceneId, { status: "draft" });
+      }
     } catch {
       updateScene(sceneId, { status: "draft" });
     }
-  };
+  }, [scenes, genSize, updateScene, pollImage]);
 
   // ── Generate all ──────────────────────────────────────────────────────────
   const handleGenerateAll = async () => {

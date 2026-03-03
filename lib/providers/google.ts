@@ -1,13 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ChatMessage } from "./index";
 
-const client = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-
 export async function streamGoogle(
   model: string,
   messages: ChatMessage[],
   onChunk: (text: string) => void
 ): Promise<void> {
+  const client = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
   const genModel = client.getGenerativeModel({ model });
 
   const systemMessage = messages.find((m) => m.role === "system");
@@ -23,7 +22,7 @@ export async function streamGoogle(
   const chat = genModel.startChat({
     history,
     ...(systemMessage && {
-      systemInstruction: { parts: [{ text: systemMessage.content }] },
+      systemInstruction: systemMessage.content,
     }),
   });
 

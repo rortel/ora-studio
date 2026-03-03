@@ -3,6 +3,9 @@ import { cookies } from "next/headers";
 import { checkAndDeductCredits } from "@/lib/credits";
 import Replicate from "replicate";
 
+// Prediction creation is fast (< 5s) — 30s is a safe ceiling
+export const maxDuration = 30;
+
 export async function POST(request: Request) {
   const cookieStore = cookies();
   const supabase = createServerClient(
@@ -28,11 +31,20 @@ export async function POST(request: Request) {
     duration?: number;
   };
 
-  if (!process.env.REPLICATE_API_TOKEN) {
-    return new Response(JSON.stringify({ error: "REPLICATE_API_TOKEN non configuré" }), {
-      status: 500,
+  if (!prompt?.trim()) {
+    return new Response(JSON.stringify({ error: "Prompt requis" }), {
+      status: 400,
       headers: { "Content-Type": "application/json" },
     });
+  }
+
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return new Response(
+      JSON.stringify({
+        error: "REPLICATE_API_TOKEN non configuré dans les variables d'environnement Vercel.",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   const credits = await checkAndDeductCredits(user.id, "video");
@@ -45,18 +57,33 @@ export async function POST(request: Request) {
 
   const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
-  // Start prediction asynchronously — do NOT await completion (Vercel timeout)
-  const prediction = await replicate.predictions.create({
-    model: "wavespeedai/wan-2.1-t2v-480p",
-    input: {
-      prompt,
-      num_frames: Math.min(81, duration * 16),
-      fps: 16,
-    },
-  });
+  try {
+    // WAN 2.1 T2V 480p — Replicate model verified March 2025
+    const prediction = await replicate.predictions.create({
+      model: "wavespeedai/wan-2.1-t2v-480p",
+      input: {
+        prompt,
+        num_frames: Math.min(81, Math.max(17, duration * 16)),
+        fps: 16,
+        sample_shift: 8,
+        sample_steps: 30,
+        fast_mode: "Balanced",
+      },
+    });
 
-  return new Response(
-    JSON.stringify({ predictionId: prediction.id, creditsRemaining: credits.remaining }),
-    { headers: { "Content-Type": "application/json" } }
-  );
+    return new Response(
+      JSON.stringify({
+        predictionId: prediction.id,
+        creditsRemaining: credits.remaining,
+      }),
+      { headers: { "Content-Type": "application/json" } }
+    );
+  } catch (err) {
+    return new Response(
+      JSON.stringify({
+        error: `Erreur Replicate : ${String(err)}. Vérifiez que REPLICATE_API_TOKEN est valide dans les settings Vercel.`,
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 }

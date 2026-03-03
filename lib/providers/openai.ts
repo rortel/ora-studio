@@ -1,13 +1,12 @@
 import OpenAI from "openai";
 import type { ChatMessage } from "./index";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
-
 export async function streamOpenAI(
   model: string,
   messages: ChatMessage[],
   onChunk: (text: string) => void
 ): Promise<void> {
+  const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
   const stream = await client.chat.completions.create({
     model,
     messages,

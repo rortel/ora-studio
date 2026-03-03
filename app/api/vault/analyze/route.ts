@@ -62,11 +62,11 @@ function extractAssets(html: string, baseUrl: string): PageAssets {
     } catch { /* ignore */ }
   }
 
-  const logoUrl = appleIcon ? resolveUrl(appleIcon, baseUrl)
+  const logoUrl = appleIcon
+    ? resolveUrl(appleIcon, baseUrl)
     : jsonLdLogo
-    : favicon ? resolveUrl(favicon, baseUrl)
-    : imgLogo ? resolveUrl(imgLogo, baseUrl)
-    : null;
+    ?? (favicon ? resolveUrl(favicon, baseUrl) : null)
+    ?? (imgLogo ? resolveUrl(imgLogo, baseUrl) : null);
 
   // Social media links
   const socialPatterns: Record<string, RegExp> = {

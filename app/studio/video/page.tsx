@@ -18,7 +18,6 @@ export default function VideoPage() {
       await new Promise((r) => setTimeout(r, 5000));
       const res = await fetch(url);
       const data = await res.json();
-
       if (data.status === "succeeded") {
         const vid = Array.isArray(data.output) ? data.output[0] : data.output;
         setVideoUrl(vid);
@@ -54,7 +53,6 @@ export default function VideoPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, duration }),
       });
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -74,37 +72,52 @@ export default function VideoPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto" style={{ background: "var(--background)" }}>
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-lg bg-rose-500/15">
-          <Video size={20} className="text-rose-400" />
+        <div className="p-2 rounded-lg" style={{ background: "var(--ora-signal-light)" }}>
+          <Video size={18} style={{ color: "var(--ora-signal)" }} />
         </div>
         <div>
-          <h1 className="text-white font-bold text-xl">Génération Vidéo</h1>
-          <p className="text-zinc-500 text-sm">WAN 2.1 via Replicate · 20 crédits</p>
+          <h1 style={{ fontSize: "18px", fontWeight: 500, color: "var(--foreground)", letterSpacing: "-0.02em" }}>
+            Génération Vidéo
+          </h1>
+          <p style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>WAN 2.1 via Replicate · 20 crédits</p>
         </div>
       </div>
 
-      <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-300 text-sm rounded-xl px-4 py-3 mb-6">
-        <Info size={15} className="shrink-0 mt-0.5" />
+      <div
+        className="flex items-start gap-2 rounded-xl px-4 py-3 mb-6"
+        style={{ background: "rgba(234,179,8,0.06)", border: "1px solid rgba(234,179,8,0.2)", color: "#a16207", fontSize: "13px" }}
+      >
+        <Info size={14} className="shrink-0 mt-0.5" />
         <p>La génération vidéo prend 1 à 3 minutes. Ne quittez pas la page.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="text-zinc-400 text-xs mb-2 block">Description de la vidéo</label>
+            <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Description de la vidéo
+            </label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               placeholder="Ex: Une voiture rouge qui roule sur une route côtière au coucher du soleil, plan cinématique, slow motion..."
               rows={5}
-              className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-rose-500/50 placeholder-zinc-600 resize-none transition-colors"
+              className="w-full rounded-xl px-4 py-3 outline-none resize-none transition-colors"
+              style={{
+                fontSize: "14px",
+                background: "var(--input-background)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
             />
           </div>
 
           <div>
-            <label className="text-zinc-400 text-xs mb-2 block">
+            <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
               Durée cible : {duration}s
             </label>
             <input
@@ -114,9 +127,10 @@ export default function VideoPage() {
               step={1}
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
-              className="w-full accent-rose-500"
+              className="w-full"
+              style={{ accentColor: "var(--ora-signal)" }}
             />
-            <div className="flex justify-between text-zinc-600 text-xs mt-1">
+            <div className="flex justify-between mt-1" style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>
               <span>3s</span>
               <span>5s</span>
             </div>
@@ -125,62 +139,66 @@ export default function VideoPage() {
           <button
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
-            className="w-full flex items-center justify-center gap-2 bg-rose-500 hover:bg-rose-400 disabled:opacity-40 text-white font-medium py-3 rounded-xl text-sm transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-opacity disabled:opacity-40"
+            style={{ fontSize: "14px", fontWeight: 500, background: "var(--ora-signal)", color: "#ffffff" }}
           >
             {loading ? (
-              <><Loader2 size={15} className="animate-spin" /> {statusMsg || "Génération en cours…"}</>
+              <><Loader2 size={14} className="animate-spin" /> {statusMsg || "Génération en cours…"}</>
             ) : (
-              <><Video size={15} /> Générer la vidéo</>
+              <><Video size={14} /> Générer la vidéo</>
             )}
           </button>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}
+            >
               {error}
             </div>
           )}
         </div>
 
         <div>
-          <label className="text-zinc-400 text-xs mb-2 block">Résultat</label>
-          <div className="rounded-xl border border-border/40 overflow-hidden bg-surface2 aspect-video relative">
+          <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Résultat
+          </label>
+          <div
+            className="rounded-xl overflow-hidden aspect-video relative"
+            style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
+          >
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <Loader2 size={32} className="animate-spin text-rose-400" />
-                <p className="text-zinc-400 text-sm">{statusMsg || "Génération de la vidéo…"}</p>
-                <p className="text-zinc-600 text-xs">1 à 3 minutes</p>
+                <Loader2 size={28} className="animate-spin" style={{ color: "var(--ora-signal)" }} />
+                <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>{statusMsg || "Génération de la vidéo…"}</p>
+                <p style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>1 à 3 minutes</p>
               </div>
             )}
             {!loading && !videoUrl && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <Video size={40} className="text-zinc-700 mx-auto mb-2" />
-                  <p className="text-zinc-600 text-sm">La vidéo apparaîtra ici</p>
+                  <Video size={36} className="mx-auto mb-2" style={{ color: "var(--muted-foreground)" }} />
+                  <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>La vidéo apparaîtra ici</p>
                 </div>
               </div>
             )}
             {videoUrl && (
-              <video
-                src={videoUrl}
-                controls
-                autoPlay
-                loop
-                className="w-full h-full object-cover"
-              />
+              <video src={videoUrl} controls autoPlay loop className="w-full h-full object-cover" />
             )}
           </div>
 
           {videoUrl && (
             <div className="flex items-center justify-between mt-3">
-              {model && <span className="text-zinc-600 text-xs">{model}</span>}
+              {model && <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>{model}</span>}
               <a
                 href={videoUrl}
                 download="ora-studio-video.mp4"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors hover:bg-[var(--secondary)]"
+                style={{ fontSize: "12px", color: "var(--muted-foreground)" }}
               >
-                <Download size={12} />
+                <Download size={11} />
                 Télécharger
               </a>
             </div>

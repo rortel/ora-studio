@@ -9,16 +9,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#09090b",
-        surface: "#18181b",
-        surface2: "#27272a",
-        border: "#3f3f46",
-        primary: "#8b5cf6",
-        "primary-hover": "#7c3aed",
-        muted: "#71717a",
+        // ORA design tokens — light theme
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        card: "var(--card)",
+        primary: "var(--primary)",
+        "primary-foreground": "var(--primary-foreground)",
+        secondary: "var(--secondary)",
+        muted: "var(--muted)",
+        "muted-foreground": "var(--muted-foreground)",
+        "ora-signal": "var(--ora-signal)",
+        "ora-signal-light": "var(--ora-signal-light)",
+        destructive: "var(--destructive)",
+        // Legacy aliases for gradual migration
+        bg: "var(--background)",
+        surface: "var(--card)",
+        surface2: "var(--secondary)",
+        border: "var(--border)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
       },
       animation: {

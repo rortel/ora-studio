@@ -31,17 +31,13 @@ export default function ImagePage() {
   const [statusMsg, setStatusMsg] = useState("");
   const [error, setError] = useState("");
 
-  // Poll Replicate prediction until succeeded / failed (max 2 min)
   const pollPrediction = async (predictionId: string) => {
     const encodedPrompt = encodeURIComponent(prompt);
     for (let i = 0; i < 60; i++) {
       await new Promise((r) => setTimeout(r, 2000));
       try {
-        const res = await fetch(
-          `/api/predictions/${predictionId}?prompt=${encodedPrompt}&type=image`
-        );
+        const res = await fetch(`/api/predictions/${predictionId}?prompt=${encodedPrompt}&type=image`);
         const data = await res.json();
-
         if (data.status === "succeeded") {
           const url = Array.isArray(data.output) ? data.output[0] : data.output;
           setImageUrl(url);
@@ -58,7 +54,7 @@ export default function ImagePage() {
         }
         setStatusMsg(`Génération en cours… (${(i + 1) * 2}s)`);
       } catch {
-        // transient network error — keep polling
+        // transient error — keep polling
       }
     }
     setError("Timeout : la génération a pris trop de temps (> 2 min)");
@@ -80,7 +76,6 @@ export default function ImagePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, style, size }),
       });
-
       const data = await response.json();
 
       if (!response.ok) {
@@ -90,7 +85,6 @@ export default function ImagePage() {
         return;
       }
 
-      // DALL-E returns url directly; Replicate returns predictionId
       if (data.url) {
         setImageUrl(data.url);
         setModel(data.model ?? "dall-e-3");
@@ -112,47 +106,63 @@ export default function ImagePage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto" style={{ background: "var(--background)" }}>
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-lg bg-emerald-500/15">
-          <ImageIcon size={20} className="text-emerald-400" />
+        <div className="p-2 rounded-lg" style={{ background: "var(--ora-signal-light)" }}>
+          <ImageIcon size={18} style={{ color: "var(--ora-signal)" }} />
         </div>
         <div>
-          <h1 className="text-white font-bold text-xl">Génération Image</h1>
-          <p className="text-zinc-500 text-sm">FLUX Schnell via Replicate · 5 crédits</p>
+          <h1 style={{ fontSize: "18px", fontWeight: 500, color: "var(--foreground)", letterSpacing: "-0.02em" }}>
+            Génération Image
+          </h1>
+          <p style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
+            FLUX Schnell via Replicate · 5 crédits
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Controls */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="text-zinc-400 text-xs mb-2 block">Description de l'image</label>
+            <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Description
+            </label>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate();
-              }}
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleGenerate(); }}
               placeholder="Ex: Un café parisien au lever du soleil, ambiance chaleureuse, lumière dorée..."
               rows={4}
-              className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500/50 placeholder-zinc-600 resize-none transition-colors"
+              className="w-full rounded-xl px-4 py-3 outline-none resize-none transition-colors"
+              style={{
+                fontSize: "14px",
+                background: "var(--input-background)",
+                border: "1px solid var(--border)",
+                color: "var(--foreground)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
             />
           </div>
 
           <div>
-            <label className="text-zinc-400 text-xs mb-2 block">Style</label>
+            <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Style
+            </label>
             <div className="flex flex-wrap gap-2">
               {STYLES.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setStyle(s.id)}
-                  className={clsx(
-                    "px-3 py-1.5 rounded-lg text-sm transition-all border",
-                    style === s.id
-                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                      : "border-border/30 text-zinc-400 hover:text-white hover:border-border"
-                  )}
+                  className={clsx("px-3 py-1.5 rounded-lg transition-all")}
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: style === s.id ? 500 : 400,
+                    border: `1px solid ${style === s.id ? "var(--ora-signal-ring)" : "var(--border)"}`,
+                    background: style === s.id ? "var(--ora-signal-light)" : "transparent",
+                    color: style === s.id ? "var(--ora-signal)" : "var(--muted-foreground)",
+                  }}
                 >
                   {s.label}
                 </button>
@@ -161,21 +171,23 @@ export default function ImagePage() {
           </div>
 
           <div>
-            <label className="text-zinc-400 text-xs mb-2 block">Format</label>
+            <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Format
+            </label>
             <div className="flex gap-2">
               {SIZES.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setSize(s.id as typeof size)}
-                  className={clsx(
-                    "flex-1 py-2 rounded-lg text-sm transition-all border text-center",
-                    size === s.id
-                      ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-300"
-                      : "border-border/30 text-zinc-400 hover:text-white hover:border-border"
-                  )}
+                  className="flex-1 py-2 rounded-lg transition-all text-center"
+                  style={{
+                    border: `1px solid ${size === s.id ? "var(--ora-signal-ring)" : "var(--border)"}`,
+                    background: size === s.id ? "var(--ora-signal-light)" : "transparent",
+                    color: size === s.id ? "var(--ora-signal)" : "var(--muted-foreground)",
+                  }}
                 >
-                  <div className="font-medium">{s.label}</div>
-                  <div className="text-xs text-zinc-500">{s.ratio}</div>
+                  <div style={{ fontSize: "13px", fontWeight: size === s.id ? 500 : 400 }}>{s.label}</div>
+                  <div style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>{s.ratio}</div>
                 </button>
               ))}
             </div>
@@ -184,17 +196,21 @@ export default function ImagePage() {
           <button
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-white font-medium py-3 rounded-xl text-sm transition-all"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl transition-opacity disabled:opacity-40"
+            style={{ fontSize: "14px", fontWeight: 500, background: "var(--ora-signal)", color: "#ffffff" }}
           >
             {loading ? (
-              <><Loader2 size={15} className="animate-spin" />{statusMsg || "Génération…"}</>
+              <><Loader2 size={14} className="animate-spin" />{statusMsg || "Génération…"}</>
             ) : (
-              <><ImageIcon size={15} />Générer l'image</>
+              <><ImageIcon size={14} />Générer l&apos;image</>
             )}
           </button>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
+            <div
+              className="rounded-xl px-4 py-3"
+              style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}
+            >
               {error}
             </div>
           )}
@@ -202,35 +218,33 @@ export default function ImagePage() {
 
         {/* Result */}
         <div>
-          <label className="text-zinc-400 text-xs mb-2 block">Résultat</label>
+          <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Résultat
+          </label>
           <div
             className={clsx(
-              "relative rounded-xl border border-border/40 overflow-hidden bg-surface2",
-              size === "portrait"
-                ? "aspect-[9/16]"
-                : size === "square"
-                ? "aspect-square"
-                : "aspect-video"
+              "relative rounded-xl overflow-hidden",
+              size === "portrait" ? "aspect-[9/16]" : size === "square" ? "aspect-square" : "aspect-video"
             )}
+            style={{ background: "var(--secondary)", border: "1px solid var(--border)" }}
           >
             {loading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <Loader2 size={32} className="animate-spin text-emerald-400" />
-                <p className="text-zinc-400 text-sm">{statusMsg || "Génération en cours…"}</p>
-                <p className="text-zinc-600 text-xs">10 à 30 secondes</p>
+                <Loader2 size={28} className="animate-spin" style={{ color: "var(--ora-signal)" }} />
+                <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>{statusMsg || "Génération en cours…"}</p>
+                <p style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>10 à 30 secondes</p>
               </div>
             )}
             {!loading && !imageUrl && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <ImageIcon size={40} className="text-zinc-700 mx-auto mb-2" />
-                  <p className="text-zinc-600 text-sm">L'image apparaîtra ici</p>
+                  <ImageIcon size={36} className="mx-auto mb-2" style={{ color: "var(--muted-foreground)" }} />
+                  <p style={{ fontSize: "13px", color: "var(--muted-foreground)" }}>L&apos;image apparaîtra ici</p>
                 </div>
               </div>
             )}
             {imageUrl && (
               <>
-                {/* Using <img> — Replicate/DALL-E URLs are not in next.config remotePatterns */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={imageUrl} alt={prompt} className="w-full h-full object-cover" />
                 <div className="absolute bottom-3 right-3">
@@ -239,15 +253,19 @@ export default function ImagePage() {
                     download="ora-studio-image.webp"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 text-white text-xs px-3 py-1.5 rounded-lg transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors"
+                    style={{ fontSize: "12px", background: "rgba(255,255,255,0.9)", color: "var(--foreground)", backdropFilter: "blur(4px)" }}
                   >
-                    <Download size={12} />
+                    <Download size={11} />
                     Télécharger
                   </a>
                 </div>
                 {model && (
                   <div className="absolute top-3 left-3">
-                    <span className="bg-black/60 text-zinc-300 text-[10px] px-2 py-1 rounded-md">
+                    <span
+                      className="px-2 py-1 rounded-md"
+                      style={{ fontSize: "10px", background: "rgba(255,255,255,0.85)", color: "var(--muted-foreground)", backdropFilter: "blur(4px)" }}
+                    >
                       {model}
                     </span>
                   </div>

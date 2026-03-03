@@ -67,31 +67,38 @@ export default function TextPage() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-4xl mx-auto" style={{ background: "var(--background)" }}>
+      {/* Header */}
       <div className="flex items-center gap-3 mb-8">
-        <div className="p-2 rounded-lg bg-violet-500/15">
-          <Sparkles size={20} className="text-violet-400" />
+        <div className="p-2 rounded-lg" style={{ background: "var(--ora-signal-light)" }}>
+          <Sparkles size={18} style={{ color: "var(--ora-signal)" }} />
         </div>
         <div>
-          <h1 className="text-white font-bold text-xl">Génération Texte</h1>
-          <p className="text-zinc-500 text-sm">Mistral Large · 1 crédit</p>
+          <h1 style={{ fontSize: "18px", fontWeight: 500, color: "var(--foreground)", letterSpacing: "-0.02em" }}>
+            Génération Texte
+          </h1>
+          <p style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>Mistral Large · 1 crédit</p>
         </div>
       </div>
 
       {/* Format selector */}
-      <div className="mb-4">
-        <label className="text-zinc-400 text-xs mb-2 block">Format</label>
+      <div className="mb-6">
+        <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Format
+        </label>
         <div className="flex flex-wrap gap-2">
           {FORMATS.map((f) => (
             <button
               key={f}
               onClick={() => setFormat(f)}
-              className={clsx(
-                "px-3 py-1.5 rounded-lg text-sm font-medium transition-all border",
-                format === f
-                  ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
-                  : "border-border/30 text-zinc-400 hover:text-white hover:border-border"
-              )}
+              className={clsx("px-3 py-1.5 rounded-lg transition-all")}
+              style={{
+                fontSize: "13px",
+                fontWeight: format === f ? 500 : 400,
+                border: `1px solid ${format === f ? "var(--ora-signal-ring)" : "var(--border)"}`,
+                background: format === f ? "var(--ora-signal-light)" : "transparent",
+                color: format === f ? "var(--ora-signal)" : "var(--muted-foreground)",
+              }}
             >
               {f}
             </button>
@@ -100,32 +107,46 @@ export default function TextPage() {
       </div>
 
       {/* Prompt */}
-      <div className="mb-4">
-        <label className="text-zinc-400 text-xs mb-2 block">Votre demande</label>
+      <div className="mb-5">
+        <label style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          Votre demande
+        </label>
         <textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={`Ex: Rédigez un ${format.toLowerCase()} sur les avantages de l'IA pour les PME`}
           rows={4}
-          className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500/50 placeholder-zinc-600 resize-none transition-colors"
+          className="w-full rounded-xl px-4 py-3 outline-none resize-none transition-colors"
+          style={{
+            fontSize: "14px",
+            background: "var(--input-background)",
+            border: "1px solid var(--border)",
+            color: "var(--foreground)",
+          }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = "var(--ora-signal)"; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
         />
       </div>
 
       <button
         onClick={handleGenerate}
         disabled={loading || !prompt.trim()}
-        className="flex items-center gap-2 bg-violet-500 hover:bg-violet-400 disabled:opacity-40 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-all"
+        className="flex items-center gap-2 px-5 py-2.5 rounded-lg transition-opacity disabled:opacity-40"
+        style={{ fontSize: "14px", fontWeight: 500, background: "var(--ora-signal)", color: "#ffffff" }}
       >
         {loading ? (
           <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          <Sparkles size={15} />
+          <Sparkles size={14} />
         )}
         {loading ? "Génération..." : "Générer"}
       </button>
 
       {error && (
-        <div className="mt-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
+        <div
+          className="mt-4 rounded-xl px-4 py-3"
+          style={{ background: "rgba(212,24,61,0.06)", border: "1px solid rgba(212,24,61,0.15)", color: "var(--destructive)", fontSize: "13px" }}
+        >
           {error}
         </div>
       )}
@@ -133,16 +154,22 @@ export default function TextPage() {
       {result && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-zinc-400 text-xs">Résultat</span>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Résultat
+            </span>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/5"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors hover:bg-[var(--secondary)]"
+              style={{ fontSize: "12px", color: "var(--muted-foreground)" }}
             >
-              {copied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+              {copied ? <Check size={12} style={{ color: "#16a34a" }} /> : <Copy size={12} />}
               {copied ? "Copié" : "Copier"}
             </button>
           </div>
-          <div className="bg-surface border border-border/40 rounded-xl px-6 py-5 prose prose-invert prose-sm max-w-none">
+          <div
+            className="rounded-xl px-6 py-5 prose prose-sm max-w-none"
+            style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+          >
             <ReactMarkdown>{result}</ReactMarkdown>
           </div>
         </div>

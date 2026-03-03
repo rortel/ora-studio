@@ -91,14 +91,25 @@ function checkBrand(scene: Scene, vault: Vault | null): BrandCheck {
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 80 ? "bg-emerald-400" : score >= 60 ? "bg-amber-400" : "bg-red-400";
-  const textColor = score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-400" : "text-red-400";
+  const barColor = score >= 80 ? "#22c55e" : score >= 60 ? "#eab308" : "#ef4444";
+  const textColor = score >= 80 ? "#16a34a" : score >= 60 ? "#a16207" : "var(--destructive)";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        <div className={clsx("h-full rounded-full transition-all duration-500", color)} style={{ width: `${score}%` }} />
+      <div
+        className="flex-1 rounded-full overflow-hidden"
+        style={{ height: "6px", background: "var(--secondary)" }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${score}%`, background: barColor }}
+        />
       </div>
-      <span className={clsx("text-xs font-mono font-bold tabular-nums", textColor)}>{score}%</span>
+      <span
+        className="text-xs font-mono font-bold tabular-nums"
+        style={{ color: textColor }}
+      >
+        {score}%
+      </span>
     </div>
   );
 }
@@ -299,42 +310,67 @@ export default function ProductionPage() {
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col" style={{ height: "100vh", overflow: "hidden" }}>
+    <div className="flex flex-col" style={{ height: "100vh", overflow: "hidden", background: "var(--background)" }}>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <header className="shrink-0 h-14 border-b border-border/30 bg-surface/60 backdrop-blur-sm flex items-center gap-4 px-5">
+      <header
+        className="shrink-0 h-14 flex items-center gap-4 px-5"
+        style={{
+          background: "var(--card)",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
         <div className="flex items-center gap-2.5 mr-1">
-          <div className="p-1.5 rounded-lg bg-primary/15">
-            <Clapperboard size={15} className="text-primary" />
+          <div
+            className="p-1.5 rounded-lg"
+            style={{ background: "var(--ora-signal-light)" }}
+          >
+            <Clapperboard size={15} style={{ color: "var(--ora-signal)" }} />
           </div>
-          <span className="text-white font-semibold text-sm whitespace-nowrap">Studio Production</span>
+          <span
+            className="font-semibold text-sm whitespace-nowrap"
+            style={{ color: "var(--foreground)" }}
+          >
+            Studio Production
+          </span>
         </div>
 
-        <div className="h-4 w-px bg-border/50" />
+        <div style={{ width: "1px", height: "16px", background: "var(--border)" }} />
 
         <input
           value={projectTitle}
           onChange={(e) => setProjectTitle(e.target.value)}
-          className="flex-1 max-w-sm bg-transparent text-white text-sm border-b border-transparent hover:border-border/50 focus:border-primary focus:outline-none px-1 py-0.5 transition-colors min-w-0"
+          className="flex-1 max-w-sm text-sm px-1 py-0.5 min-w-0 bg-transparent focus:outline-none transition-colors"
+          style={{
+            color: "var(--foreground)",
+            borderBottom: "1px solid transparent",
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderBottomColor = "var(--ora-signal)")}
+          onBlur={(e) => (e.currentTarget.style.borderBottomColor = "transparent")}
           placeholder="Nom du projet"
         />
 
         <div className="flex items-center gap-3 ml-auto shrink-0">
           {/* Vault selector */}
           <div className="flex items-center gap-2">
-            <Shield size={13} className="text-zinc-500 shrink-0" />
+            <Shield size={13} style={{ color: "var(--muted-foreground)" }} className="shrink-0" />
             <div className="relative">
               <select
                 value={vaultId}
                 onChange={(e) => setVaultId(e.target.value)}
-                className="appearance-none bg-surface2 text-zinc-300 text-xs border border-border/40 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-primary cursor-pointer"
+                className="appearance-none text-xs rounded-lg pl-3 pr-7 py-1.5 focus:outline-none cursor-pointer"
+                style={{
+                  background: "var(--secondary)",
+                  color: "var(--foreground)",
+                  border: "1px solid var(--border)",
+                }}
               >
                 <option value="">Aucun vault</option>
                 {vaults.map((v) => (
                   <option key={v.id} value={v.id}>{v.brand_name ?? v.name}</option>
                 ))}
               </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
             </div>
           </div>
 
@@ -343,14 +379,24 @@ export default function ProductionPage() {
               <button
                 onClick={handleGenerateAll}
                 disabled={isGeneratingAll}
-                className="flex items-center gap-1.5 text-xs bg-primary/15 hover:bg-primary/25 text-primary border border-primary/25 px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 whitespace-nowrap"
+                style={{
+                  background: "var(--ora-signal-light)",
+                  color: "var(--ora-signal)",
+                  border: "1px solid var(--ora-signal-ring)",
+                }}
               >
                 {isGeneratingAll ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
                 Tout générer
               </button>
               <button
                 onClick={handleExport}
-                className="flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white border border-border/30 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
+                className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap"
+                style={{
+                  background: "var(--secondary)",
+                  border: "1px solid var(--border)",
+                  color: "var(--foreground)",
+                }}
               >
                 <Download size={12} />
                 Exporter
@@ -364,24 +410,52 @@ export default function ProductionPage() {
       <div className="flex-1 flex overflow-hidden">
 
         {/* ── Left Panel — Import ─────────────────────────────────────── */}
-        <aside className="w-72 shrink-0 border-r border-border/30 flex flex-col overflow-y-auto bg-surface/20">
+        <aside
+          className="w-72 shrink-0 flex flex-col overflow-y-auto"
+          style={{
+            background: "var(--card)",
+            borderRight: "1px solid var(--border)",
+          }}
+        >
           <div className="p-4 space-y-5">
             <div>
-              <h2 className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest mb-3">Importer</h2>
+              <h2
+                className="mb-3 block"
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 500,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  color: "var(--muted-foreground)",
+                }}
+              >
+                Importer
+              </h2>
 
               {/* Import tabs */}
-              <div className="flex bg-surface2 rounded-lg p-0.5 mb-3">
+              <div
+                className="flex rounded-lg p-0.5 mb-3"
+                style={{ background: "var(--secondary)" }}
+              >
                 <button
                   onClick={() => setImportTab("url")}
-                  className={clsx("flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-all",
-                    importTab === "url" ? "bg-surface text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300")}
+                  className={clsx("flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-all")}
+                  style={
+                    importTab === "url"
+                      ? { background: "var(--card)", color: "var(--foreground)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }
+                      : { color: "var(--muted-foreground)" }
+                  }
                 >
                   <Globe size={12} /> URL
                 </button>
                 <button
                   onClick={() => setImportTab("doc")}
-                  className={clsx("flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-all",
-                    importTab === "doc" ? "bg-surface text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300")}
+                  className={clsx("flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs transition-all")}
+                  style={
+                    importTab === "doc"
+                      ? { background: "var(--card)", color: "var(--foreground)", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }
+                      : { color: "var(--muted-foreground)" }
+                  }
                 >
                   <FileText size={12} /> Document
                 </button>
@@ -396,9 +470,14 @@ export default function ProductionPage() {
                     onChange={(e) => setSourceUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleStructure()}
                     placeholder="https://monsite.com/produit"
-                    className="w-full bg-surface border border-border/40 text-white text-xs rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary placeholder-zinc-600 transition-colors"
+                    className="w-full text-xs rounded-xl px-3 py-2.5 focus:outline-none transition-colors"
+                    style={{
+                      background: "var(--input-background)",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }}
                   />
-                  <p className="text-zinc-700 text-[10px]">Page produit, service, landing page…</p>
+                  <p style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>Page produit, service, landing page…</p>
                 </div>
               )}
 
@@ -408,18 +487,25 @@ export default function ProductionPage() {
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={isParsing}
-                    className="w-full flex flex-col items-center gap-2.5 border border-dashed border-border/50 hover:border-primary/40 bg-surface/50 hover:bg-primary/5 rounded-xl p-5 text-center transition-all group"
+                    className="w-full flex flex-col items-center gap-2.5 rounded-xl p-5 text-center transition-all group"
+                    style={{
+                      border: "1px dashed var(--border)",
+                      background: "var(--secondary)",
+                    }}
                   >
                     {isParsing ? (
-                      <Loader2 size={22} className="text-primary animate-spin" />
+                      <Loader2 size={22} className="animate-spin" style={{ color: "var(--ora-signal)" }} />
                     ) : (
-                      <Upload size={22} className="text-zinc-600 group-hover:text-primary transition-colors" />
+                      <Upload size={22} style={{ color: "var(--muted-foreground)" }} />
                     )}
                     <div>
-                      <p className="text-white text-xs font-medium group-hover:text-primary transition-colors">
+                      <p
+                        className="text-xs font-medium"
+                        style={{ color: "var(--foreground)" }}
+                      >
                         {isParsing ? "Lecture…" : docFilename || "Glisser ou cliquer"}
                       </p>
-                      <p className="text-zinc-600 text-[10px] mt-0.5">PDF · PPTX · DOCX · TXT</p>
+                      <p style={{ fontSize: "10px", color: "var(--muted-foreground)", marginTop: "2px" }}>PDF · PPTX · DOCX · TXT</p>
                     </div>
                   </button>
                   <input
@@ -436,26 +522,47 @@ export default function ProductionPage() {
               {extractedText && (
                 <div className="mt-3">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider">
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        letterSpacing: "0.06em",
+                        textTransform: "uppercase",
+                        color: "var(--muted-foreground)",
+                      }}
+                    >
                       Contenu extrait {docFilename && `— ${docFilename}`}
                     </span>
                     <button
                       onClick={() => { setExtractedText(""); setDocFilename(""); }}
-                      className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                      className="transition-colors"
+                      style={{ color: "var(--muted-foreground)" }}
                     >
                       <X size={12} />
                     </button>
                   </div>
-                  <div className="bg-surface2 rounded-lg p-3 max-h-28 overflow-y-auto">
-                    <p className="text-zinc-400 text-[11px] leading-relaxed">{extractedText.slice(0, 500)}{extractedText.length > 500 ? "…" : ""}</p>
+                  <div className="rounded-lg p-3 max-h-28 overflow-y-auto" style={{ background: "var(--secondary)" }}>
+                    <p className="leading-relaxed" style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>
+                      {extractedText.slice(0, 500)}{extractedText.length > 500 ? "…" : ""}
+                    </p>
                   </div>
-                  <p className="text-zinc-700 text-[10px] mt-1">{extractedText.length.toLocaleString()} caractères extraits</p>
+                  <p style={{ fontSize: "10px", color: "var(--muted-foreground)", marginTop: "4px" }}>
+                    {extractedText.length.toLocaleString()} caractères extraits
+                  </p>
                 </div>
               )}
 
               {/* Error */}
               {importError && (
-                <div className="mt-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] rounded-xl px-3 py-2.5 flex items-start gap-2">
+                <div
+                  className="mt-3 rounded-xl px-3 py-2.5 flex items-start gap-2"
+                  style={{
+                    background: "rgba(212,24,61,0.06)",
+                    border: "1px solid rgba(212,24,61,0.15)",
+                    color: "var(--destructive)",
+                    fontSize: "11px",
+                  }}
+                >
                   <AlertCircle size={13} className="mt-0.5 shrink-0" />
                   {importError}
                 </div>
@@ -463,26 +570,49 @@ export default function ProductionPage() {
             </div>
 
             {/* ── Options ── */}
-            <div className="border-t border-border/20 pt-4 space-y-3">
+            <div className="pt-4 space-y-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="flex items-center justify-between">
-                <label className="text-zinc-500 text-xs">Nombre de scènes</label>
+                <label className="text-xs" style={{ color: "var(--muted-foreground)" }}>Nombre de scènes</label>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setSceneCount((n) => Math.max(2, n - 1))}
-                    className="w-6 h-6 rounded-lg bg-surface2 hover:bg-surface text-zinc-400 hover:text-white text-sm transition-all flex items-center justify-center"
-                  >−</button>
-                  <span className="text-white text-sm font-semibold tabular-nums w-4 text-center">{sceneCount}</span>
+                    className="w-6 h-6 rounded-lg text-sm transition-all flex items-center justify-center"
+                    style={{
+                      background: "var(--secondary)",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }}
+                  >
+                    −
+                  </button>
+                  <span
+                    className="text-sm font-semibold tabular-nums w-4 text-center"
+                    style={{ color: "var(--foreground)" }}
+                  >
+                    {sceneCount}
+                  </span>
                   <button
                     onClick={() => setSceneCount((n) => Math.min(12, n + 1))}
-                    className="w-6 h-6 rounded-lg bg-surface2 hover:bg-surface text-zinc-400 hover:text-white text-sm transition-all flex items-center justify-center"
-                  >+</button>
+                    className="w-6 h-6 rounded-lg text-sm transition-all flex items-center justify-center"
+                    style={{
+                      background: "var(--secondary)",
+                      border: "1px solid var(--border)",
+                      color: "var(--foreground)",
+                    }}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
               <button
                 onClick={() => handleStructure()}
                 disabled={(!sourceUrl && !extractedText) || isExtracting}
-                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 disabled:opacity-40 text-white text-xs font-semibold py-3 rounded-xl transition-all"
+                className="w-full flex items-center justify-center gap-2 disabled:opacity-40 text-xs font-semibold py-3 rounded-xl transition-all"
+                style={{
+                  background: "var(--ora-signal)",
+                  color: "#ffffff",
+                }}
               >
                 {isExtracting ? (
                   <><Loader2 size={13} className="animate-spin" />Structuration IA…</>
@@ -493,20 +623,30 @@ export default function ProductionPage() {
             </div>
 
             {/* ── Add / Reset ── */}
-            <div className="border-t border-border/20 pt-4 space-y-2">
+            <div className="pt-4 space-y-2" style={{ borderTop: "1px solid var(--border)" }}>
               <button
                 onClick={addScene}
-                className="w-full flex items-center justify-center gap-2 text-xs text-zinc-400 hover:text-white bg-white/5 hover:bg-white/8 border border-border/30 hover:border-border/50 py-2 rounded-xl transition-all"
+                className="w-full flex items-center justify-center gap-2 text-xs py-2 rounded-xl transition-all"
+                style={{
+                  background: "var(--secondary)",
+                  border: "1px solid var(--border)",
+                  color: "var(--foreground)",
+                }}
               >
                 <Plus size={13} /> Ajouter une scène vide
               </button>
 
               {scenes.length > 0 && (
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-zinc-700 text-[11px]">{scenes.length} scène{scenes.length > 1 ? "s" : ""}</span>
+                  <span style={{ fontSize: "11px", color: "var(--muted-foreground)" }}>
+                    {scenes.length} scène{scenes.length > 1 ? "s" : ""}
+                  </span>
                   <button
                     onClick={() => { setScenes([]); setSelectedId(null); }}
-                    className="text-zinc-700 hover:text-red-400 text-[11px] transition-colors"
+                    className="transition-colors"
+                    style={{ fontSize: "11px", color: "var(--muted-foreground)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--destructive)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted-foreground)")}
                   >
                     Tout effacer
                   </button>
@@ -517,20 +657,26 @@ export default function ProductionPage() {
         </aside>
 
         {/* ── Right — Storyboard + Editor ─────────────────────────────── */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden" style={{ background: "var(--background)" }}>
 
           {/* ── Storyboard ─────────────────────────────────────────────── */}
-          <div className="shrink-0 border-b border-border/30 bg-bg/50 px-4 py-3">
+          <div
+            className="shrink-0 px-4 py-3"
+            style={{
+              borderBottom: "1px solid var(--border)",
+              background: "var(--card)",
+            }}
+          >
             {scenes.length === 0 ? (
-              <div className="flex items-center gap-3 h-28 text-zinc-700 text-xs">
+              <div className="flex items-center gap-3 h-28 text-xs" style={{ color: "var(--muted-foreground)" }}>
                 <Clapperboard size={20} className="shrink-0" />
                 <div>
-                  <p className="text-zinc-500">Table de montage vide</p>
-                  <p>Importez du contenu ou ajoutez des scènes pour démarrer.</p>
+                  <p style={{ color: "var(--muted-foreground)" }}>Table de montage vide</p>
+                  <p style={{ color: "var(--muted-foreground)", opacity: 0.7 }}>Importez du contenu ou ajoutez des scènes pour démarrer.</p>
                 </div>
               </div>
             ) : (
-              <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin", scrollbarColor: "#3f3f46 transparent" }}>
+              <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "thin", scrollbarColor: "var(--border) transparent" }}>
                 {scenes.map((scene) => (
                   <SceneCard
                     key={scene.id}
@@ -543,7 +689,21 @@ export default function ProductionPage() {
                 {/* Add button */}
                 <button
                   onClick={addScene}
-                  className="w-[7.5rem] shrink-0 h-28 rounded-xl border border-dashed border-border/40 hover:border-primary/40 hover:bg-primary/5 flex items-center justify-center text-zinc-700 hover:text-primary transition-all"
+                  className="w-[7.5rem] shrink-0 h-28 rounded-xl flex items-center justify-center transition-all"
+                  style={{
+                    border: "1px dashed var(--border)",
+                    color: "var(--muted-foreground)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--ora-signal-ring)";
+                    e.currentTarget.style.color = "var(--ora-signal)";
+                    e.currentTarget.style.background = "var(--ora-signal-light)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.color = "var(--muted-foreground)";
+                    e.currentTarget.style.background = "transparent";
+                  }}
                 >
                   <Plus size={20} />
                 </button>
@@ -555,11 +715,18 @@ export default function ProductionPage() {
           <div className="flex-1 overflow-hidden">
             {!selectedScene ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-10">
-                <div className="w-16 h-16 rounded-2xl bg-surface border border-border/30 flex items-center justify-center mb-4">
-                  <Clapperboard size={22} className="text-zinc-700" />
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                  style={{
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+                  }}
+                >
+                  <Clapperboard size={22} style={{ color: "var(--muted-foreground)" }} />
                 </div>
-                <p className="text-zinc-400 text-sm mb-1">Sélectionnez une scène</p>
-                <p className="text-zinc-700 text-xs max-w-xs">
+                <p className="text-sm mb-1" style={{ color: "var(--muted-foreground)" }}>Sélectionnez une scène</p>
+                <p className="text-xs max-w-xs" style={{ color: "var(--muted-foreground)", opacity: 0.7 }}>
                   Cliquez sur une scène dans la table de montage pour éditer son contenu et générer son visuel.
                 </p>
               </div>
@@ -591,53 +758,79 @@ function SceneCard({
   onClick: () => void;
   onDelete: () => void;
 }) {
+  const statusDotColor =
+    scene.status === "empty" ? "var(--muted-foreground)" :
+    scene.status === "draft" ? "var(--border)" :
+    scene.status === "generating" ? "#f59e0b" :
+    "#22c55e";
+
   return (
     <div
       onClick={onClick}
-      className={clsx(
-        "w-[7.5rem] shrink-0 h-28 rounded-xl border overflow-hidden cursor-pointer transition-all group relative",
-        selected ? "border-primary ring-1 ring-primary/30" : "border-border/40 hover:border-primary/30"
-      )}
+      className="w-[7.5rem] shrink-0 h-28 rounded-xl overflow-hidden cursor-pointer transition-all group relative"
+      style={
+        selected
+          ? {
+              border: "1px solid var(--ora-signal-ring)",
+              boxShadow: "0 0 0 2px var(--ora-signal-light)",
+            }
+          : {
+              border: "1px solid var(--border)",
+            }
+      }
     >
       {/* Thumbnail */}
-      <div className="h-[4.5rem] bg-surface2 relative overflow-hidden">
+      <div className="h-[4.5rem] relative overflow-hidden" style={{ background: "var(--secondary)" }}>
         {scene.image_url ? (
           <img src={scene.image_url} className="w-full h-full object-cover" alt={scene.title} />
         ) : (
           <div className="flex items-center justify-center h-full">
             {scene.status === "generating" ? (
-              <Loader2 size={16} className="text-amber-400 animate-spin" />
+              <Loader2 size={16} className="animate-spin" style={{ color: "#f59e0b" }} />
             ) : (
-              <ImageIcon size={16} className="text-zinc-700" />
+              <ImageIcon size={16} style={{ color: "var(--muted-foreground)" }} />
             )}
           </div>
         )}
 
         {/* Scene number */}
-        <span className="absolute top-1 left-1 text-[9px] font-mono bg-black/50 text-zinc-400 px-1 py-0.5 rounded">
+        <span
+          className="absolute top-1 left-1 font-mono px-1 py-0.5 rounded"
+          style={{
+            fontSize: "9px",
+            background: "rgba(0,0,0,0.5)",
+            color: "rgba(255,255,255,0.7)",
+          }}
+        >
           {scene.order}
         </span>
 
         {/* Status dot */}
-        <div className={clsx("absolute top-1 right-1 w-2 h-2 rounded-full", {
-          "bg-zinc-700": scene.status === "empty",
-          "bg-zinc-500": scene.status === "draft",
-          "bg-amber-400 animate-pulse": scene.status === "generating",
-          "bg-emerald-400": scene.status === "ready",
-        })} />
+        <div
+          className={clsx("absolute top-1 right-1 w-2 h-2 rounded-full", {
+            "animate-pulse": scene.status === "generating",
+          })}
+          style={{ background: statusDotColor }}
+        />
 
         {/* Delete overlay */}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: "rgba(0,0,0,0.6)" }}
         >
-          <Trash2 size={14} className="text-white" />
+          <Trash2 size={14} style={{ color: "#ffffff" }} />
         </button>
       </div>
 
       {/* Label */}
-      <div className="px-2 py-1.5 bg-surface">
-        <p className="text-white text-[11px] font-medium truncate leading-snug">{scene.title || "Sans titre"}</p>
+      <div className="px-2 py-1.5" style={{ background: "var(--card)" }}>
+        <p
+          className="truncate leading-snug"
+          style={{ fontSize: "11px", fontWeight: 500, color: "var(--foreground)" }}
+        >
+          {scene.title || "Sans titre"}
+        </p>
       </div>
     </div>
   );
@@ -657,39 +850,87 @@ function SceneEditor({
   onGenerate: () => void;
 }) {
   return (
-    <div className="h-full grid grid-cols-2 divide-x divide-border/30 overflow-hidden">
-
+    <div
+      className="h-full grid grid-cols-2 overflow-hidden"
+      style={{ borderTop: "none" }}
+    >
       {/* ── Left: Content ──────────────────────────────────────────────── */}
-      <div className="overflow-y-auto p-5 space-y-4">
+      <div
+        className="overflow-y-auto p-5 space-y-4"
+        style={{ borderRight: "1px solid var(--border)" }}
+      >
         {/* Scene title */}
         <div>
-          <label className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Titre de la scène</label>
+          <label
+            className="mb-1.5 block"
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--muted-foreground)",
+            }}
+          >
+            Titre de la scène
+          </label>
           <input
             value={scene.title}
             onChange={(e) => onUpdate({ title: e.target.value })}
-            className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary transition-colors"
+            className="w-full text-sm rounded-xl px-3 py-2.5 focus:outline-none transition-colors"
+            style={{
+              background: "var(--input-background)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
           />
         </div>
 
         {/* Script */}
         <div>
-          <label className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Script / Narration</label>
+          <label
+            className="mb-1.5 block"
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--muted-foreground)",
+            }}
+          >
+            Script / Narration
+          </label>
           <textarea
             value={scene.script}
             onChange={(e) => onUpdate({ script: e.target.value })}
             rows={5}
             placeholder="Texte narratif de la scène, voix off, description…"
-            className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-3 py-3 focus:outline-none focus:border-primary placeholder-zinc-600 resize-none transition-colors leading-relaxed"
+            className="w-full text-sm rounded-xl px-3 py-3 focus:outline-none resize-none transition-colors leading-relaxed"
+            style={{
+              background: "var(--input-background)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
           />
         </div>
 
         {/* Caption */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider">Caption réseaux sociaux</label>
+            <label
+              style={{
+                fontSize: "11px",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--muted-foreground)",
+              }}
+            >
+              Caption réseaux sociaux
+            </label>
             <button
               onClick={() => navigator.clipboard.writeText(scene.caption)}
-              className="flex items-center gap-1 text-zinc-600 hover:text-zinc-300 text-[10px] transition-colors"
+              className="flex items-center gap-1 transition-colors"
+              style={{ fontSize: "10px", color: "var(--muted-foreground)" }}
             >
               <Copy size={11} /> Copier
             </button>
@@ -699,11 +940,24 @@ function SceneEditor({
             onChange={(e) => onUpdate({ caption: e.target.value })}
             rows={5}
             placeholder="Caption avec emojis, saut de lignes, hashtags…"
-            className="w-full bg-surface border border-border/40 text-white text-sm rounded-xl px-3 py-3 focus:outline-none focus:border-primary placeholder-zinc-600 resize-none transition-colors"
+            className="w-full text-sm rounded-xl px-3 py-3 focus:outline-none resize-none transition-colors"
+            style={{
+              background: "var(--input-background)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
           />
           <div className="flex justify-between mt-1">
-            <span className="text-zinc-700 text-[10px]">Instagram max 2200 · LinkedIn max 3000</span>
-            <span className={clsx("text-[10px] tabular-nums", scene.caption.length > 2200 ? "text-amber-400" : "text-zinc-700")}>
+            <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>
+              Instagram max 2200 · LinkedIn max 3000
+            </span>
+            <span
+              className="tabular-nums"
+              style={{
+                fontSize: "10px",
+                color: scene.caption.length > 2200 ? "#a16207" : "var(--muted-foreground)",
+              }}
+            >
               {scene.caption.length}
             </span>
           </div>
@@ -711,37 +965,62 @@ function SceneEditor({
 
         {/* Visual prompt */}
         <div>
-          <label className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">
-            Prompt visuel <span className="text-zinc-700 normal-case font-normal">(anglais — FLUX / DALL·E)</span>
+          <label
+            className="mb-1.5 block"
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--muted-foreground)",
+            }}
+          >
+            Prompt visuel{" "}
+            <span style={{ textTransform: "none", fontWeight: 400, color: "var(--muted-foreground)", opacity: 0.7 }}>
+              (anglais — FLUX / DALL·E)
+            </span>
           </label>
           <textarea
             value={scene.visual_prompt}
             onChange={(e) => onUpdate({ visual_prompt: e.target.value })}
             rows={5}
             placeholder="Professional photography of… cinematic lighting, 4K, ultra detailed, sharp focus, rule of thirds…"
-            className="w-full bg-surface border border-border/40 text-white text-xs rounded-xl px-3 py-3 focus:outline-none focus:border-primary placeholder-zinc-600 resize-none transition-colors font-mono leading-relaxed"
+            className="w-full text-xs rounded-xl px-3 py-3 focus:outline-none resize-none transition-colors font-mono leading-relaxed"
+            style={{
+              background: "var(--input-background)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
           />
-          <p className="text-zinc-700 text-[10px] mt-1 text-right">{scene.visual_prompt.length} caractères</p>
+          <p className="mt-1 text-right" style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>
+            {scene.visual_prompt.length} caractères
+          </p>
         </div>
       </div>
 
       {/* ── Right: Visual ──────────────────────────────────────────────── */}
       <div className="overflow-y-auto p-5 space-y-4 flex flex-col">
         {/* Image preview */}
-        <div className="aspect-square w-full rounded-xl bg-surface2 border border-border/30 overflow-hidden flex-shrink-0">
+        <div
+          className="aspect-square w-full rounded-xl overflow-hidden flex-shrink-0"
+          style={{
+            background: "var(--secondary)",
+            border: "1px solid var(--border)",
+          }}
+        >
           {scene.image_url ? (
             <img src={scene.image_url} className="w-full h-full object-cover" alt="Visuel généré" />
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-2">
               {scene.status === "generating" ? (
                 <>
-                  <Loader2 size={28} className="text-primary animate-spin" />
-                  <p className="text-zinc-500 text-xs">Génération en cours…</p>
+                  <Loader2 size={28} className="animate-spin" style={{ color: "var(--ora-signal)" }} />
+                  <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Génération en cours…</p>
                 </>
               ) : (
                 <>
-                  <ImageIcon size={36} className="text-zinc-800" />
-                  <p className="text-zinc-600 text-xs">Aucun visuel généré</p>
+                  <ImageIcon size={36} style={{ color: "var(--muted-foreground)", opacity: 0.4 }} />
+                  <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>Aucun visuel généré</p>
                 </>
               )}
             </div>
@@ -750,7 +1029,18 @@ function SceneEditor({
 
         {/* Format selector */}
         <div>
-          <label className="text-zinc-500 text-[10px] font-medium uppercase tracking-wider mb-2 block">Format</label>
+          <label
+            className="mb-2 block"
+            style={{
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--muted-foreground)",
+            }}
+          >
+            Format
+          </label>
           <div className="grid grid-cols-3 gap-1.5">
             {([
               { value: "square", label: "Carré", desc: "1:1" },
@@ -760,15 +1050,23 @@ function SceneEditor({
               <button
                 key={value}
                 onClick={() => onGenSize(value)}
-                className={clsx(
-                  "py-2 rounded-lg text-xs border transition-all flex flex-col items-center gap-0.5",
+                className="py-2 rounded-lg text-xs transition-all flex flex-col items-center gap-0.5"
+                style={
                   genSize === value
-                    ? "bg-primary/15 border-primary/30 text-primary"
-                    : "border-border/30 text-zinc-500 hover:text-white hover:border-border/50"
-                )}
+                    ? {
+                        background: "var(--ora-signal-light)",
+                        color: "var(--ora-signal)",
+                        border: "1px solid var(--ora-signal-ring)",
+                      }
+                    : {
+                        background: "var(--secondary)",
+                        border: "1px solid var(--border)",
+                        color: "var(--muted-foreground)",
+                      }
+                }
               >
-                <span className="font-medium">{label}</span>
-                <span className="text-[10px] opacity-60">{desc}</span>
+                <span style={{ fontWeight: 500 }}>{label}</span>
+                <span style={{ fontSize: "10px", opacity: 0.7 }}>{desc}</span>
               </button>
             ))}
           </div>
@@ -779,12 +1077,20 @@ function SceneEditor({
           <button
             onClick={onGenerate}
             disabled={!scene.visual_prompt || scene.status === "generating"}
-            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/80 disabled:opacity-40 text-white text-sm font-semibold py-3 rounded-xl transition-all"
+            className="w-full flex items-center justify-center gap-2 disabled:opacity-40 text-sm font-semibold py-3 rounded-xl transition-all"
+            style={{
+              background: "var(--ora-signal)",
+              color: "#ffffff",
+            }}
           >
             {scene.status === "generating" ? (
               <><Loader2 size={15} className="animate-spin" />Génération…</>
             ) : (
-              <><Sparkles size={15} />{scene.image_url ? "Regénérer" : "Générer l'image"}<span className="text-white/50 text-xs font-normal">(5 cr)</span></>
+              <>
+                <Sparkles size={15} />
+                {scene.image_url ? "Regénérer" : "Générer l'image"}
+                <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "12px", fontWeight: 400 }}>(5 cr)</span>
+              </>
             )}
           </button>
 
@@ -794,7 +1100,12 @@ function SceneEditor({
               download
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full flex items-center justify-center gap-2 text-xs text-zinc-400 hover:text-white bg-white/5 hover:bg-white/10 py-2.5 rounded-xl transition-all border border-border/20"
+              className="w-full flex items-center justify-center gap-2 text-xs py-2.5 rounded-xl transition-all"
+              style={{
+                background: "var(--secondary)",
+                border: "1px solid var(--border)",
+                color: "var(--muted-foreground)",
+              }}
             >
               <Download size={13} />Télécharger
             </a>
@@ -803,26 +1114,41 @@ function SceneEditor({
 
         {/* Brand check */}
         {check && vault && (
-          <div className="bg-surface border border-border/40 rounded-xl p-4 space-y-3">
+          <div
+            className="rounded-xl p-4 space-y-3"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+            }}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Shield size={13} className={check.score >= 80 ? "text-emerald-400" : check.score >= 60 ? "text-amber-400" : "text-red-400"} />
-                <span className="text-white text-xs font-medium">Brand Check</span>
-                <span className="text-zinc-600 text-[10px]">— {vault.brand_name ?? vault.name}</span>
+                <Shield
+                  size={13}
+                  style={{
+                    color:
+                      check.score >= 80 ? "#16a34a" :
+                      check.score >= 60 ? "#a16207" :
+                      "var(--destructive)",
+                  }}
+                />
+                <span className="text-xs font-medium" style={{ color: "var(--foreground)" }}>Brand Check</span>
+                <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>— {vault.brand_name ?? vault.name}</span>
               </div>
             </div>
 
             <ScoreBar score={check.score} />
 
             {check.warnings.length === 0 ? (
-              <div className="flex items-center gap-2 text-emerald-400 text-xs">
+              <div className="flex items-center gap-2 text-xs" style={{ color: "#16a34a" }}>
                 <CheckCircle size={13} />
                 <span>Conforme à la charte de marque</span>
               </div>
             ) : (
               <ul className="space-y-1.5">
                 {check.warnings.map((w, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-amber-300">
+                  <li key={i} className="flex items-start gap-2 text-xs" style={{ color: "#a16207" }}>
                     <AlertCircle size={12} className="mt-0.5 shrink-0" />
                     {w}
                   </li>
@@ -831,11 +1157,16 @@ function SceneEditor({
             )}
 
             {vault.guidelines?.visual?.primary_colors && vault.guidelines.visual.primary_colors.length > 0 && (
-              <div className="flex items-center gap-2 pt-1 border-t border-border/20">
-                <span className="text-zinc-600 text-[10px]">Palette marque</span>
+              <div className="flex items-center gap-2 pt-1" style={{ borderTop: "1px solid var(--border)" }}>
+                <span style={{ fontSize: "10px", color: "var(--muted-foreground)" }}>Palette marque</span>
                 <div className="flex gap-1">
                   {vault.guidelines.visual.primary_colors.slice(0, 4).map((c, i) => (
-                    <div key={i} title={c} className="w-4 h-4 rounded border border-white/10" style={{ backgroundColor: c }} />
+                    <div
+                      key={i}
+                      title={c}
+                      className="w-4 h-4 rounded"
+                      style={{ backgroundColor: c, border: "1px solid var(--border)" }}
+                    />
                   ))}
                 </div>
               </div>
@@ -847,7 +1178,12 @@ function SceneEditor({
         {scene.caption && (
           <button
             onClick={() => navigator.clipboard.writeText(scene.caption)}
-            className="w-full flex items-center justify-center gap-2 text-xs text-zinc-500 hover:text-white py-2 rounded-xl border border-border/20 hover:border-border/40 bg-transparent hover:bg-white/5 transition-all"
+            className="w-full flex items-center justify-center gap-2 text-xs py-2 rounded-xl transition-all"
+            style={{
+              background: "transparent",
+              border: "1px solid var(--border)",
+              color: "var(--muted-foreground)",
+            }}
           >
             <Copy size={12} />Copier la caption
           </button>

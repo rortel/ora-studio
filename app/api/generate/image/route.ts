@@ -1,45 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { checkAndDeductCredits, saveGeneration } from "@/lib/credits";
+import Replicate from "replicate";
 
-// Support both FAL_API_KEY (Vercel naming) and FAL_KEY
-const FAL_KEY = process.env.FAL_API_KEY ?? process.env.FAL_KEY ?? "";
-
-async function generateWithFal(prompt: string, size: string): Promise<string> {
+async function generateWithReplicate(prompt: string, size: string): Promise<string> {
   const [width, height] = size === "portrait" ? [768, 1024] : size === "square" ? [1024, 1024] : [1024, 768];
-
-  const model = process.env.REPLICATE_IMAGE_MODEL ?? "fal-ai/flux/schnell";
-  const falModel = model.includes("fal-ai") ? model : "fal-ai/flux/schnell";
-
-  const response = await fetch(`https://fal.run/${falModel}`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Key ${FAL_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      prompt,
-      image_size: { width, height },
-      num_inference_steps: 4,
-      num_images: 1,
-    }),
+  const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN! });
+  const output = await replicate.run("black-forest-labs/flux-schnell", {
+    input: { prompt, width, height, num_outputs: 1, output_format: "webp" },
   });
-
-  if (!response.ok) {
-    const err = await response.text();
-    throw new Error(`Fal AI error: ${err}`);
-  }
-
-  const data = await response.json() as { images: Array<{ url: string }> };
-  return data.images[0].url;
+  const url = Array.isArray(output) ? output[0] : String(output);
+  if (!url) throw new Error("Aucune image retournée par Replicate");
+  return url;
 }
 
 async function generateWithOpenAI(prompt: string, size: string): Promise<string> {
   const OpenAI = (await import("openai")).default;
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
   const dalleSize = size === "portrait" ? "1024x1792" : size === "square" ? "1024x1024" : "1792x1024";
-
   const response = await client.images.generate({
     model: "dall-e-3",
     prompt,
@@ -47,7 +25,6 @@ async function generateWithOpenAI(prompt: string, size: string): Promise<string>
     quality: "standard",
     n: 1,
   });
-
   return response.data[0].url!;
 }
 
@@ -91,17 +68,20 @@ export async function POST(request: Request) {
   let model: string;
 
   try {
-    if (FAL_KEY) {
-      imageUrl = await generateWithFal(enhancedPrompt, size);
-      model = process.env.REPLICATE_IMAGE_MODEL ?? "fal-ai/flux-schnell";
+    if (process.env.REPLICATE_API_TOKEN) {
+      imageUrl = await generateWithReplicate(enhancedPrompt, size);
+      model = "black-forest-labs/flux-schnell";
     } else if (process.env.OPENAI_API_KEY) {
       imageUrl = await generateWithOpenAI(enhancedPrompt, size);
       model = "dall-e-3";
     } else {
-      throw new Error("Aucune clé API image configurée (FAL_API_KEY ou OPENAI_API_KEY)");
+      return new Response(JSON.stringify({ error: "Aucune clé API image configurée (REPLICATE_API_TOKEN ou OPENAI_API_KEY)" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
-  } catch {
-    if (process.env.OPENAI_API_KEY && FAL_KEY) {
+  } catch (err) {
+    if (process.env.OPENAI_API_KEY) {
       try {
         imageUrl = await generateWithOpenAI(enhancedPrompt, size);
         model = "dall-e-3";
@@ -112,7 +92,7 @@ export async function POST(request: Request) {
         });
       }
     } else {
-      return new Response(JSON.stringify({ error: "Erreur de génération d'image" }), {
+      return new Response(JSON.stringify({ error: String(err) }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });

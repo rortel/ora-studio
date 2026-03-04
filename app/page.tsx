@@ -2,12 +2,9 @@ import "@/components/landing/landing-theme.css";
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
 import { SocialProof } from "@/components/landing/SocialProof";
-import { ThreeSteps } from "@/components/landing/ThreeSteps";
-import { PulseRadar } from "@/components/landing/PulseRadar";
-import { ValueProposition } from "@/components/landing/ValueProposition";
-import { CommandCenterMock } from "@/components/landing/CommandCenterMock";
-import { DecisionMakers } from "@/components/landing/DecisionMakers";
-import { Agents } from "@/components/landing/Agents";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { ArenaSection } from "@/components/landing/ArenaSection";
+import { StudioSection } from "@/components/landing/StudioSection";
 import { Pricing } from "@/components/landing/Pricing";
 import { FAQ } from "@/components/landing/FAQ";
 import { CTASection } from "@/components/landing/CTASection";
@@ -20,12 +17,9 @@ export default function LandingPage() {
       <main style={{ paddingTop: "56px" }}>
         <Hero />
         <SocialProof />
-        <ThreeSteps />
-        <PulseRadar />
-        <ValueProposition />
-        <CommandCenterMock />
-        <DecisionMakers />
-        <Agents />
+        <HowItWorks />
+        <ArenaSection />
+        <StudioSection />
         <Pricing />
         <FAQ />
         <CTASection />

@@ -19,8 +19,7 @@ export function Navbar() {
 
   const marketingLinks = [
     { label: "How it works", href: "/#how-it-works" },
-    { label: "Agents", href: "/agents" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "Pricing", href: "/#pricing" },
   ];
 
   return (
@@ -74,7 +73,7 @@ export function Navbar() {
             Sign in
           </Link>
           <Link
-            href="/login"
+            href="/onboarding"
             className="px-5 py-2 rounded-lg hover:opacity-90 transition-opacity"
             style={{ fontSize: "14px", fontWeight: 500, background: "var(--primary)", color: "var(--primary-foreground)" }}
           >

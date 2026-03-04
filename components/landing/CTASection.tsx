@@ -44,15 +44,15 @@ export function CTASection() {
           </p>
           <div className="flex items-center justify-center gap-3">
             <Link
-              href="/studio"
+              href="/onboarding"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg hover:opacity-90 transition-opacity"
               style={{ fontSize: "15px", fontWeight: 500, background: "var(--primary)", color: "var(--primary-foreground)" }}
             >
-              Open ORA — it&apos;s free
+              Start for free — 50 credits
               <ArrowRight size={16} />
             </Link>
             <Link
-              href="/pricing"
+              href="/#pricing"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg transition-colors"
               style={{
                 fontSize: "15px",

@@ -18,7 +18,7 @@ export function Hero() {
           >
             <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--ora-signal)" }} />
             <span style={{ fontSize: "14px", fontWeight: 400, color: "var(--foreground)" }}>
-              AI Aggregator + Studio. Brand Vault is optional.
+              Generate. Compare. Choose the best.
             </span>
           </motion.div>
 
@@ -46,11 +46,8 @@ export function Hero() {
             className="mb-4"
             style={{ fontSize: "18px", lineHeight: 1.55, color: "rgba(17,17,19,0.8)" }}
           >
-            ORA gives you access to top models by category in one workspace.
-            Text: Gemini 2.5 Flash/Pro, GPT-4o Mini, GPT-4o, Claude Haiku 4, Claude Sonnet 4, Mistral Small/Large.
-            Image: Gemini Image, Imagen 3, DALL-E 3, Flux 1.1 Pro, Flux 2 Pro, Seedream 5.0, Recraft V3.
-            Video: Veo 2, Kling 3.0 Pro, MiniMax Hailuo, Sora 2.
-            Code: Gemini 2.5 Flash, GPT-4o, Claude Sonnet 4.
+            ORA brings the best models for text, image, video, and code into one clear workspace.
+            Generate with the right model, compare outputs in Arena, pick the best — no juggling tools, no managing subscriptions.
           </motion.p>
 
           <motion.p
@@ -60,9 +57,8 @@ export function Hero() {
             className="mb-8"
             style={{ fontSize: "15px", lineHeight: 1.55, color: "var(--muted-foreground)" }}
           >
-            Whether you&apos;re drafting a quick email, comparing image styles, or producing a full campaign
-            - you don&apos;t need five subscriptions and ten tabs anymore. Start generating in seconds.
-            Add brand control when the project calls for it.
+            No five subscriptions. No ten open tabs. Generate, compare, and ship — in seconds.
+            Add brand control with Studio when the project calls for it.
           </motion.p>
 
           <motion.div
@@ -82,11 +78,11 @@ export function Hero() {
                 style={{ fontSize: "14px", color: "var(--foreground)" }}
               />
               <Link
-                href="/studio"
+                href="/onboarding"
                 className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
                 style={{ fontSize: "14px", fontWeight: 500, background: "var(--primary)", color: "var(--primary-foreground)" }}
               >
-                Start free - 50 credits, no card
+                Start free — 50 credits, no card
                 <ArrowRight size={14} />
               </Link>
             </div>

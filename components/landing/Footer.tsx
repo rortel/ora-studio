@@ -6,13 +6,11 @@ export function Footer() {
     {
       title: "Product",
       links: [
-        { label: "Hub", href: "/studio" },
-        { label: "Chat", href: "/studio" },
-        { label: "Studio", href: "/studio" },
+        { label: "Command Center", href: "/studio" },
+        { label: "Chat & Arena", href: "/studio/chat" },
         { label: "Brand Vault", href: "/studio/vault" },
-        { label: "Agents", href: "/agents" },
-        { label: "Pricing", href: "/pricing" },
-        { label: "Changelog", href: "/changelog" },
+        { label: "Canvas", href: "/studio/canvas" },
+        { label: "Pricing", href: "/#pricing" },
       ],
     },
     {

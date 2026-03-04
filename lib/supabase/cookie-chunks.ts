@@ -5,7 +5,7 @@
  * so we split them into 3000-byte chunks and reassemble on read.
  */
 
-export const CHUNK_SIZE = 3000;
+export const CHUNK_SIZE = 2000;
 
 /** Read a (possibly chunked) cookie value from a flat list of cookies. */
 export function getChunkedCookie(

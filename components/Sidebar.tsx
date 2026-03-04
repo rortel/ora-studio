@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { clsx } from "clsx";
 import {
   Sparkles, Code2, ImageIcon, Video, LogOut, LayoutDashboard,
-  Bot, Shield, Settings, Clapperboard, CreditCard, Music, Frame,
+  Bot, Shield, Settings, Clapperboard, CreditCard, Music, Frame, GitBranch,
 } from "lucide-react";
 import { PulseIcon } from "./landing/PulseMotif";
 
@@ -24,6 +24,7 @@ const BRAND_ITEMS = [
   { href: "/studio/vault", label: "Brand Vault", icon: Shield, studioOnly: true },
   { href: "/studio/canvas", label: "Table de montage", icon: Frame, studioOnly: true },
   { href: "/studio/production", label: "Asset Builder", icon: Clapperboard, studioOnly: false },
+  { href: "/studio/flows", label: "Flows", icon: GitBranch, studioOnly: false },
 ];
 
 const PLAN_LABELS: Record<string, string> = {

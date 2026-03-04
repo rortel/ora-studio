@@ -158,9 +158,9 @@ export default function Sidebar({ credits, email, role, plan = "trial" }: Sideba
         )}
 
         <div className="flex items-center justify-between px-2 py-2" style={{ borderTop: "1px solid var(--border)" }}>
-          <span className="truncate max-w-[130px]" style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
+          <Link href="/studio/profile" className="truncate max-w-[130px] hover:text-foreground transition-colors" style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
             {email}
-          </span>
+          </Link>
           <button onClick={handleLogout}
             className="p-1.5 rounded-lg transition-colors hover:bg-[var(--secondary)]"
             style={{ color: "var(--muted-foreground)" }} title="Déconnexion">

@@ -1,22 +1,26 @@
 "use client";
 
 import { motion } from "motion/react";
+import { Sparkles, Columns2, CheckCircle2 } from "lucide-react";
 
 const steps = [
   {
     num: "01",
-    title: "Generate with any model",
-    desc: "Open Hub or Chat, pick one or several models, type your prompt. You get results in seconds - text, image, video, or code. No setup, no Brand Vault required. Just you and the AI you prefer.",
+    title: "Generate with the right model",
+    desc: "Text, image, video, code — pick from the top models for each category, or let ORA route your prompt. No juggling tabs, no managing subscriptions.",
+    icon: Sparkles,
   },
   {
     num: "02",
-    title: "Compare and pick the best parts",
-    desc: "Run the same prompt on 2 to 4 models at once with Arena. See every result side by side. Pick the one you like. Or take the best paragraph from one, the best hook from another, and combine them into a single output.",
+    title: "Compare outputs in Arena",
+    desc: "One prompt to 2-4 models at once. Results side by side. Pick the best, mix parts from different outputs, or refine on the spot.",
+    icon: Columns2,
   },
   {
     num: "03",
-    title: "Turn on Studio when it matters",
-    desc: "Working on something official? Switch to Studio mode. Connect your Brand Vault - ORA checks tone, vocabulary, structure, and visual direction against your guidelines. You publish knowing it fits.",
+    title: "Choose. Publish. Move on.",
+    desc: "Keep what works, discard the rest. Add Studio for brand consistency, the Canvas editor, and publish-ready assets — when the project calls for it.",
+    icon: CheckCircle2,
   },
 ];
 
@@ -30,57 +34,109 @@ export function ThreeSteps() {
           viewport={{ once: true }}
           className="mb-14"
         >
+          <span
+            className="inline-block mb-4 px-3 py-1 rounded-full"
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--ora-signal)",
+              background: "var(--ora-signal-light)",
+              border: "1px solid rgba(59,79,196,0.1)",
+            }}
+          >
+            How it works
+          </span>
           <h2
+            className="text-foreground mb-4"
             style={{
               fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
               fontWeight: 500,
               letterSpacing: "-0.03em",
               lineHeight: 1.15,
-              color: "var(--foreground)",
-              marginBottom: "16px",
             }}
           >
-            Three steps. Two modes. One platform.
+            Generate. Compare. Choose.
           </h2>
-          <p style={{ fontSize: "16px", lineHeight: 1.55, color: "var(--muted-foreground)" }}>
-            Start fast in Aggregator mode. Switch to Studio when the work needs brand control.
+          <p
+            className="text-muted-foreground"
+            style={{ fontSize: "16px", lineHeight: 1.55 }}
+          >
+            A clear workflow for every type of generation. No complexity, no tool switching.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.num}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="pt-6"
-              style={{ borderTop: "1px solid var(--border)" }}
-            >
-              <span
-                className="block mb-4"
-                style={{ fontSize: "14px", fontWeight: 500, color: "var(--ora-signal)" }}
-              >
-                {step.num}
-              </span>
-              <h3
+        <div className="grid md:grid-cols-3 gap-5">
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative bg-card border rounded-xl p-7 transition-all cursor-default"
                 style={{
-                  fontSize: "18px",
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.3,
-                  color: "var(--foreground)",
-                  marginBottom: "12px",
+                  borderColor: "var(--border)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
                 }}
               >
-                {step.title}
-              </h3>
-              <p style={{ fontSize: "15px", lineHeight: 1.6, color: "var(--muted-foreground)" }}>
-                {step.desc}
-              </p>
-            </motion.div>
-          ))}
+                <span
+                  className="absolute top-4 right-5 select-none pointer-events-none"
+                  style={{
+                    fontSize: "72px",
+                    fontWeight: 600,
+                    color: "var(--ora-signal)",
+                    opacity: 0.04,
+                    lineHeight: 1,
+                    letterSpacing: "-0.04em",
+                  }}
+                >
+                  {step.num}
+                </span>
+
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-5"
+                  style={{
+                    background: "var(--ora-signal-light)",
+                    border: "1px solid rgba(59,79,196,0.1)",
+                  }}
+                >
+                  <Icon
+                    size={18}
+                    style={{ color: "var(--ora-signal)" }}
+                    strokeWidth={1.5}
+                  />
+                </div>
+
+                <span
+                  className="mb-2 block"
+                  style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.06em", color: "var(--ora-signal)" }}
+                >
+                  Step {step.num}
+                </span>
+                <h3
+                  className="text-foreground mb-3"
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 500,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {step.title}
+                </h3>
+                <p
+                  className="text-muted-foreground"
+                  style={{ fontSize: "14px", lineHeight: 1.65 }}
+                >
+                  {step.desc}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

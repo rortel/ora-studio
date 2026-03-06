@@ -11,6 +11,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   const isAppView =
     pathname.startsWith("/studio") ||
+    pathname.startsWith("/hub") ||
+    pathname.startsWith("/remix") ||
+    pathname.startsWith("/flows") ||
+    pathname.startsWith("/profile") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/auth") ||

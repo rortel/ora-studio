@@ -1,194 +1,293 @@
 "use client";
 
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
 const plans = [
   {
-    key: "trial",
-    name: "Essai gratuit",
-    subtitle: "Teste ORA sans engagement ni carte bancaire.",
-    price: "0",
+    name: "Free",
+    price: "Free",
     period: "",
-    badge: null,
-    credits: "50 crédits offerts",
+    audience: "Test ORA with no commitment and no credit card.",
+    credits: "50 free credits",
     features: [
-      "50 crédits sans CB",
-      "Comparateur multi-IA (GPT-4o, Claude, Gemini)",
-      "Génération texte, image, code",
-      "Crédits rollover illimité",
+      "50 credits, no card required",
+      "Multi-AI comparator (GPT-4o, Claude, Gemini)",
+      "Text, image, code generation",
+      "Unlimited credit rollover",
     ],
-    cta: "Essayer gratuitement",
-    ctaHref: "/onboarding",
+    cta: "Start for free",
     highlighted: false,
   },
   {
-    key: "generate",
     name: "Generate",
-    subtitle: "Pour créateurs et indépendants qui génèrent régulièrement.",
-    price: "19",
-    period: "/mois",
-    badge: null,
-    credits: "200 crédits à l'activation",
+    price: "\u20AC19",
+    period: "/month",
+    audience: "For creators and independents who generate regularly.",
+    credits: "200 credits at activation",
     features: [
-      "200 crédits à l'activation",
-      "Comparateur multi-IA illimité",
-      "Texte, image, code, audio, vidéo",
-      "Crédits rollover illimité",
-      "Packs crédits disponibles",
+      "200 credits at activation",
+      "Unlimited multi-AI comparator",
+      "Text, image, code, audio, video",
+      "Unlimited credit rollover",
+      "Credit packs available",
     ],
-    cta: "Démarrer Generate",
-    ctaHref: "/studio",
+    cta: "Start Generate",
     highlighted: false,
   },
   {
-    key: "studio",
     name: "Studio",
-    subtitle: "Pour les marques qui veulent du contenu aligné avec leur identité.",
-    price: "49",
-    period: "/mois",
-    badge: "RECOMMANDÉ",
-    credits: "500 crédits/mois inclus",
+    price: "\u20AC49",
+    period: "/month",
+    audience: "For brands that want content aligned with their identity.",
+    credits: "500 credits/month included",
     features: [
-      "500 crédits/mois inclus",
-      "Tout Generate +",
-      "Brand Vault (identité de marque)",
-      "1 produit/service inclus",
-      "Table de montage (Canva-like)",
-      "Asset Builder complet",
-      "Crédits rollover illimité",
+      "500 credits/month included",
+      "Everything in Generate +",
+      "Brand Vault (brand identity)",
+      "1 product/service included",
+      "Canvas editor (Canva-like)",
+      "Complete Asset Builder",
+      "Unlimited credit rollover",
     ],
-    cta: "Démarrer Studio",
-    ctaHref: "/studio",
+    cta: "Start Studio",
     highlighted: true,
   },
 ];
 
-const packs = [
-  { credits: "1 000 crédits", price: "€10", per: "€0.01/cr", label: "Pack S" },
-  { credits: "5 000 crédits", price: "€45", per: "€0.009/cr", label: "Pack M" },
-  { credits: "20 000 crédits", price: "€160", per: "€0.008/cr", label: "Pack L" },
-];
-
-const costs = [
-  { action: "Texte (1 modèle)", credits: "1 cr" },
-  { action: "Comparaison 3 modèles", credits: "3 cr" },
-  { action: "Image", credits: "4 cr" },
-  { action: "Audio", credits: "4 cr" },
-  { action: "Code", credits: "2 cr" },
-  { action: "Vidéo (~10s)", credits: "100 cr" },
-];
-
 export function Pricing() {
   return (
-    <section id="pricing" className="py-20 md:py-28" style={{ background: "rgba(244,244,246,0.4)" }}>
+    <section id="pricing" className="py-20 md:py-28">
       <div className="max-w-[1200px] mx-auto px-6">
         <motion.div
-          initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-          className="mb-14">
-          <h2 style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)", fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1.15, color: "var(--foreground)", marginBottom: 16 }}>
-            Tarifs transparents. Aucune surprise.
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-14"
+        >
+          <span
+            className="inline-block mb-4 px-3 py-1 rounded-full"
+            style={{
+              fontSize: "10px",
+              fontWeight: 600,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "var(--ora-signal)",
+              background: "var(--ora-signal-light)",
+              border: "1px solid rgba(59,79,196,0.1)",
+            }}
+          >
+            Pricing
+          </span>
+          <h2
+            className="text-foreground mb-4"
+            style={{
+              fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)",
+              fontWeight: 500,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.15,
+            }}
+          >
+            Transparent pricing. No surprises.
           </h2>
-          <p style={{ fontSize: "16px", lineHeight: 1.55, color: "var(--muted-foreground)", maxWidth: 600 }}>
-            Tu paies uniquement ce que tu utilises. Les crédits ne sont jamais perdus — rollover illimité.
+          <p
+            className="text-muted-foreground"
+            style={{ fontSize: "16px", lineHeight: 1.55 }}
+          >
+            Pay only for what you use. Credits never expire — unlimited rollover.
           </p>
         </motion.div>
 
-        <div className="mb-6">
-          <p style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--ora-signal)" }}>FORMULES</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
+        <div className="grid md:grid-cols-3 gap-5">
           {plans.map((plan, i) => (
-            <motion.div key={plan.key}
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            <motion.div
+              key={plan.name}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="relative flex flex-col rounded-xl"
-              style={{ background: "var(--card)", border: `1px solid ${plan.highlighted ? "var(--ora-signal)" : "var(--border)"}`, boxShadow: plan.highlighted ? "0 1px 3px rgba(0,0,0,0.04), 0 12px 40px rgba(59,79,196,0.08)" : "0 1px 2px rgba(0,0,0,0.02)" }}>
-              {plan.badge && (
+              className={`relative flex flex-col bg-card rounded-xl border ${
+                plan.highlighted ? "border-ora-signal" : "border-border"
+              }`}
+              style={{
+                boxShadow: plan.highlighted
+                  ? "0 1px 3px rgba(0,0,0,0.04), 0 16px 48px rgba(59,79,196,0.12), 0 0 0 1px rgba(59,79,196,0.08)"
+                  : "0 1px 3px rgba(0,0,0,0.03)",
+              }}
+            >
+              {plan.highlighted && (
                 <div className="absolute -top-3 left-6">
-                  <span className="px-3 py-0.5 rounded-full text-white"
-                    style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.05em", background: "var(--ora-signal)" }}>
-                    {plan.badge}
+                  <span
+                    className="text-white px-3 py-1 rounded-full"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, var(--ora-signal) 0%, #2a3ba8 100%)",
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    RECOMMENDED
                   </span>
                 </div>
               )}
+
               <div className="p-7 pb-0">
-                <h3 style={{ fontSize: "18px", fontWeight: 500, color: "var(--foreground)", marginBottom: 8 }}>{plan.name}</h3>
-                <p style={{ fontSize: "13px", minHeight: 42, color: "var(--muted-foreground)", marginBottom: 20 }}>{plan.subtitle}</p>
-                <div className="flex items-baseline gap-1 mb-2 pb-6" style={{ borderBottom: "1px solid var(--border)" }}>
-                  <span style={{ fontSize: "40px", fontWeight: 500, letterSpacing: "-0.03em", lineHeight: 1, color: "var(--foreground)" }}>
-                    {plan.price === "0" ? "Gratuit" : `€${plan.price}`}
+                <h3
+                  className="text-foreground mb-1"
+                  style={{ fontSize: "18px", fontWeight: 500 }}
+                >
+                  {plan.name}
+                </h3>
+                <p
+                  className="text-muted-foreground mb-5"
+                  style={{ fontSize: "13px" }}
+                >
+                  {plan.audience}
+                </p>
+                <div
+                  className="flex items-baseline gap-1 mb-2"
+                >
+                  <span
+                    className="text-foreground"
+                    style={{
+                      fontSize: "40px",
+                      fontWeight: 500,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {plan.price}
                   </span>
-                  {plan.period && <span style={{ fontSize: "15px", color: "var(--muted-foreground)" }}>{plan.period}</span>}
+                  {plan.period && (
+                    <span
+                      className="text-muted-foreground"
+                      style={{ fontSize: "15px" }}
+                    >
+                      {plan.period}
+                    </span>
+                  )}
                 </div>
-                <p style={{ fontSize: "12px", fontWeight: 500, color: "var(--ora-signal)", marginBottom: 16 }}>{plan.credits}</p>
+                <p
+                  className="mb-6 pb-6 border-b"
+                  style={{
+                    borderColor: "var(--border)",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: "var(--ora-signal)",
+                  }}
+                >
+                  {plan.credits}
+                </p>
               </div>
-              <ul className="px-7 space-y-3 flex-1">
-                {plan.features.map(f => (
+
+              <ul className="px-7 space-y-2.5 flex-1">
+                {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5">
-                    <Check size={14} className="mt-0.5 flex-shrink-0" style={{ color: "var(--ora-signal)" }} />
-                    <span style={{ fontSize: "14px", lineHeight: 1.45, color: "rgba(17,17,19,0.75)" }}>{f}</span>
+                    <div
+                      className="w-4 h-4 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0"
+                      style={{
+                        background: plan.highlighted
+                          ? "var(--ora-signal-light)"
+                          : "var(--secondary)",
+                      }}
+                    >
+                      <Check
+                        size={9}
+                        style={{
+                          color: plan.highlighted
+                            ? "var(--ora-signal)"
+                            : "var(--muted-foreground)",
+                        }}
+                        strokeWidth={2.5}
+                      />
+                    </div>
+                    <span
+                      className="text-foreground/75"
+                      style={{ fontSize: "13px", lineHeight: 1.5 }}
+                    >
+                      {f}
+                    </span>
                   </li>
                 ))}
               </ul>
+
               <div className="p-7 pt-8">
-                <Link href={plan.ctaHref}
-                  className="block w-full py-3 rounded-lg transition-all text-center"
-                  style={{ fontSize: "14px", fontWeight: 500, ...(plan.highlighted ? { background: "var(--ora-signal)", color: "white" } : { background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }) }}>
+                <Link
+                  href="/pricing"
+                  className={`group flex items-center justify-center gap-2 w-full py-3 rounded-xl transition-all ${
+                    plan.highlighted
+                      ? "text-white hover:opacity-90"
+                      : "bg-secondary text-foreground hover:bg-muted border border-border"
+                  }`}
+                  style={{
+                    background: plan.highlighted
+                      ? "linear-gradient(135deg, var(--ora-signal) 0%, #2a3ba8 100%)"
+                      : undefined,
+                    boxShadow: plan.highlighted
+                      ? "0 2px 12px rgba(59,79,196,0.3)"
+                      : undefined,
+                    fontSize: "14px",
+                    fontWeight: 500,
+                  }}
+                >
                   {plan.cta}
+                  {plan.highlighted && (
+                    <ArrowRight
+                      size={14}
+                      className="group-hover:translate-x-0.5 transition-transform"
+                    />
+                  )}
                 </Link>
               </div>
             </motion.div>
           ))}
         </div>
 
-        <div className="mb-5">
-          <p style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.08em", color: "var(--ora-signal)", marginBottom: 8 }}>PACKS CRÉDITS</p>
-          <h3 style={{ fontSize: "22px", fontWeight: 500, letterSpacing: "-0.02em", color: "var(--foreground)", marginBottom: 8 }}>
-            Crédits supplémentaires à la carte
-          </h3>
-          <p style={{ fontSize: "14px", color: "var(--muted-foreground)" }}>
-            Sans abonnement. Les crédits ne s'expirent jamais.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          {packs.map((pack, i) => (
-            <motion.div key={pack.label}
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="flex flex-col rounded-xl p-6"
-              style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--muted-foreground)", letterSpacing: "0.08em", marginBottom: 8 }}>{pack.label}</div>
-              <div style={{ fontSize: "32px", fontWeight: 500, color: "var(--foreground)", letterSpacing: "-0.02em" }}>{pack.price}</div>
-              <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--foreground)", margin: "6px 0 4px" }}>{pack.credits}</div>
-              <div style={{ fontSize: "12px", color: "var(--muted-foreground)", marginBottom: 20 }}>{pack.per} · rollover illimité</div>
-              <Link href="/studio/credits"
-                className="block w-full py-2.5 rounded-lg text-center mt-auto"
-                style={{ fontSize: "13px", fontWeight: 500, background: "var(--secondary)", color: "var(--foreground)", border: "1px solid var(--border)" }}>
-                Acheter
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-
-        <motion.div initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <h3 style={{ fontSize: "16px", fontWeight: 500, color: "var(--foreground)", marginBottom: 12 }}>Coût par action</h3>
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)", maxWidth: 480 }}>
-            {costs.map((item, i) => (
-              <div key={item.action} className="flex items-center justify-between px-4 py-3"
-                style={{ background: "var(--card)", borderBottom: i < costs.length - 1 ? "1px solid var(--border)" : "none" }}>
-                <span style={{ fontSize: "13px", color: "var(--foreground)" }}>{item.action}</span>
-                <span style={{ fontSize: "13px", fontWeight: 500, color: "var(--ora-signal)" }}>{item.credits}</span>
+        {/* Credit packs strip */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-10 grid sm:grid-cols-3 gap-4"
+        >
+          {[
+            { name: "Pack S", price: "\u20AC10", credits: "1,000 credits", rate: "\u20AC0.01/cr" },
+            { name: "Pack M", price: "\u20AC45", credits: "5,000 credits", rate: "\u20AC0.009/cr" },
+            { name: "Pack L", price: "\u20AC160", credits: "20,000 credits", rate: "\u20AC0.008/cr" },
+          ].map((pack) => (
+            <div
+              key={pack.name}
+              className="bg-card border rounded-xl px-5 py-4 flex items-center justify-between"
+              style={{
+                borderColor: "var(--border)",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+              }}
+            >
+              <div>
+                <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--foreground)" }}>
+                  {pack.name}
+                </span>
+                <span
+                  className="block"
+                  style={{ fontSize: "12px", color: "var(--muted-foreground)" }}
+                >
+                  {pack.credits} — {pack.rate}
+                </span>
               </div>
-            ))}
-          </div>
-          <p style={{ fontSize: "12px", color: "var(--muted-foreground)", marginTop: 12 }}>
-            ORA est un agrégateur IA — tu paies uniquement les appels API réels. Marge ORA de 28%, aucun préfinancement.
-          </p>
+              <span style={{ fontSize: "20px", fontWeight: 500, color: "var(--foreground)", letterSpacing: "-0.02em" }}>
+                {pack.price}
+              </span>
+            </div>
+          ))}
         </motion.div>
+        <p
+          className="text-center mt-6"
+          style={{ fontSize: "12px", color: "var(--muted-foreground)" }}
+        >
+          ORA is an AI aggregator — you only pay for actual API calls. No hidden costs, unlimited rollover.
+        </p>
       </div>
     </section>
   );

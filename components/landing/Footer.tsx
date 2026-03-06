@@ -6,20 +6,22 @@ export function Footer() {
     {
       title: "Product",
       links: [
-        { label: "Command Center", href: "/studio" },
-        { label: "Chat & Arena", href: "/studio/chat" },
-        { label: "Brand Vault", href: "/studio/vault" },
-        { label: "Canvas", href: "/studio/canvas" },
-        { label: "Pricing", href: "/#pricing" },
+        { label: "AI Hub", href: "/hub" },
+        { label: "Arena", href: "/hub" },
+        { label: "Brand Remix", href: "/remix" },
+        { label: "Flows", href: "/flows" },
+        { label: "Studio", href: "/studio" },
+        { label: "Pricing", href: "/pricing" },
       ],
     },
     {
-      title: "Use cases",
+      title: "Tools",
       links: [
-        { label: "Solo creators", href: "#" },
-        { label: "Marketing teams", href: "#" },
-        { label: "Agencies", href: "#" },
-        { label: "Founders", href: "#" },
+        { label: "Brand Score", href: "/brand-score" },
+        { label: "Prompt Recipes", href: "/recipes" },
+        { label: "Content Calendar", href: "/calendar" },
+        { label: "Brand Vault", href: "/studio/vault" },
+        { label: "Canvas", href: "/studio" },
       ],
     },
     {
@@ -44,32 +46,26 @@ export function Footer() {
   ];
 
   return (
-    <footer style={{ borderTop: "1px solid var(--border)" }} className="py-16">
+    <footer className="border-t border-border py-16">
       <div className="max-w-[1200px] mx-auto px-6">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <PulseIcon size={20} />
-              <span style={{ fontSize: "15px", fontWeight: 600, letterSpacing: "-0.02em", color: "var(--foreground)" }}>
+              <span className="text-foreground" style={{ fontSize: "15px", fontWeight: 600, letterSpacing: "-0.02em" }}>
                 ORA
               </span>
             </Link>
-            <p style={{ fontSize: "13px", lineHeight: 1.55, color: "var(--muted-foreground)" }}>
-              ORA — One account. Every AI. Your brand when you need it.
+            <p className="text-muted-foreground" style={{ fontSize: "13px", lineHeight: 1.55 }}>
+              One account. Every AI. Your brand when you need it.
             </p>
           </div>
 
           {cols.map((col) => (
             <div key={col.title}>
               <h4
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                  color: "var(--foreground)",
-                  marginBottom: "12px",
-                }}
+                className="text-foreground mb-3"
+                style={{ fontSize: "11px", fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase" }}
               >
                 {col.title}
               </h4>
@@ -78,8 +74,8 @@ export function Footer() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="transition-colors"
-                      style={{ fontSize: "13px", color: "var(--muted-foreground)" }}
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      style={{ fontSize: "13px" }}
                     >
                       {link.label}
                     </Link>
@@ -90,11 +86,8 @@ export function Footer() {
           ))}
         </div>
 
-        <div
-          className="mt-12 pt-6 flex items-center justify-between"
-          style={{ borderTop: "1px solid var(--border)" }}
-        >
-          <p style={{ fontSize: "12px", color: "var(--muted-foreground)" }}>
+        <div className="mt-12 pt-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-3">
+          <p className="text-muted-foreground" style={{ fontSize: "12px" }}>
             &copy; 2026 ORA. All rights reserved.
           </p>
         </div>
